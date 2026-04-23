@@ -1,0 +1,302 @@
+---
+title: "monecascale: hierarchical DC-SBM backend for MONECA"
+author: "Giampaolo Montaletti"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_width: 8
+    fig_height: 6
+vignette: >
+  %\VignetteIndexEntry{monecascale: hierarchical DC-SBM backend for MONECA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150,
+  out.width = "100%"
+)
+
+# Eval-gate on greed (Suggests). If missing, skip evaluation and still
+# render a readable article.
+have_greed <- requireNamespace("greed", quietly = TRUE)
+if (!have_greed) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
+```
+
+## About monecascale
+
+`monecascale` is a sibling package to [`moneca`](https://github.com/gmontaletti/MONECA).
+It provides **scalable clustering backends** whose output is consumed
+unchanged by moneca's analysis and plotting stack. The first backend,
+`moneca_sbm()`, replaces moneca's clique-enumeration step with
+hierarchical degree-corrected stochastic block model (DC-SBM)
+inference — the natural statistical twin of moneca's relative-risk
+framing.
+
+This vignette motivates the design, shows a minimal end-to-end
+workflow, reproduces the empirical parity measurement against
+`moneca::moneca_fast()`, and explains when to reach for which backend.
+
+## The theoretical bridge: RR = O/E is the DC-SBM residual
+
+MONECA's weight matrix is the relative-risk deviation of observed
+mobility from the independence null:
+
+$$
+RR_{ij} = \frac{O_{ij}}{\bigl(r_i \cdot c_j\bigr) / T}.
+$$
+
+The degree-corrected stochastic block model (Karrer & Newman, 2011)
+models the expected number of edges between nodes `i` and `j` as
+`\theta_i \theta_j \omega_{g_i, g_j}`, with `\theta` degree parameters
+and `\omega` a block-interaction matrix. Setting `\omega` to the
+identity yields exactly `(r_i c_j) / T` as the expected count — i.e.,
+MONECA's independence null. In that sense **MONECA's RR is the
+DC-SBM residual**, and the clique rule on the thresholded RR is a
+hand-rolled approximation to block inference. Any modern DC-SBM
+inference routine is therefore a principled scalable drop-in.
+
+Two backends are wired up behind `moneca_sbm()`:
+
+- `"greed"` (default, R-native via `greed::DcSbm`): hierarchical
+  dendrogram, Poisson likelihood for counts, sparse `dgCMatrix` input
+  end-to-end, portable parallel via the `future` framework. Scales
+  comfortably to ~10^4 – 10^5 nodes.
+- `"graphtool"` (opt-in, Python via `reticulate`): Peixoto's
+  `minimize_nested_blockmodel_dl()`, which uses merge-split MCMC to
+  minimize description length directly. Scales to 10^6+ nodes on
+  commodity hardware.
+
+## Quick start
+
+```{r quick-start}
+library(monecascale)
+library(moneca)
+
+mob <- generate_mobility_data(
+  n_classes = 20,
+  n_total = 5000,
+  immobility_strength = 0.5,
+  class_clustering = 0.75,
+  noise_level = 0.05,
+  seed = 2026
+)
+
+seg <- moneca_sbm(mob, backend = "greed", seed = 2026)
+seg
+```
+
+`moneca::segment.membership.dataframe()` provides the same tidy membership
+view as for `moneca_fast()` output:
+
+```{r membership}
+head(segment.membership.dataframe(seg), 10)
+```
+
+## Hierarchy without choosing `segment.levels`
+
+Unlike `moneca::moneca_fast()`, SBM backends return a full nested
+hierarchy without requiring the user to pre-specify `segment.levels`.
+The `$sbm_diagnostics` slot records the number of blocks and the
+MDL-analogue score at every level:
+
+```{r diagnostics}
+seg$sbm_diagnostics$n_blocks_per_level
+round(seg$sbm_diagnostics$mdl_per_level, 2)
+```
+
+The adapter preserves moneca's convention: `segment.list[[1]]` is
+atomic and `segment.list[[l]]` for `l >= 2` runs from finest to
+coarsest. Passing `segment.levels = 3` truncates the hierarchy to
+three approximately log-spaced levels while preserving the finest and
+coarsest.
+
+```{r truncate}
+seg3 <- moneca_sbm(mob, backend = "greed", seed = 2026, segment.levels = 3)
+length(seg3$segment.list)
+lengths(seg3$segment.list)
+```
+
+## Empirical parity against `moneca::moneca_fast()`
+
+If the theoretical bridge is right, `moneca_sbm(backend = "greed")`
+should recover segmentations close to those of `moneca::moneca_fast()`
+on a well-structured mobility matrix. We measure this directly with the
+adjusted Rand index (ARI) and normalized mutual information (NMI)
+between the per-node labelings produced by both methods.
+
+```{r parity-helpers}
+ari <- function(a, b) {
+  tab <- table(a, b); n <- sum(tab)
+  sc <- function(x) sum(choose(x, 2))
+  a_sum <- sc(rowSums(tab)); b_sum <- sc(colSums(tab))
+  tab_sum <- sc(as.vector(tab))
+  expected <- a_sum * b_sum / choose(n, 2)
+  max_idx <- (a_sum + b_sum) / 2
+  if (max_idx == expected) return(1)
+  (tab_sum - expected) / (max_idx - expected)
+}
+
+nmi <- function(a, b) {
+  tab <- table(a, b); n <- sum(tab); p <- tab / n
+  pa <- rowSums(p); pb <- colSums(p); nz <- p > 0
+  mi <- sum(p[nz] * log(p[nz] / outer(pa, pb)[nz]))
+  ha <- -sum(pa[pa > 0] * log(pa[pa > 0]))
+  hb <- -sum(pb[pb > 0] * log(pb[pb > 0]))
+  if (ha == 0 || hb == 0) return(0)
+  mi / sqrt(ha * hb)
+}
+
+level_labels <- function(mon, level) {
+  n_core <- nrow(mon$mat.list[[1]]) - 1L
+  labels <- rep(NA_integer_, n_core)
+  cliques <- mon$segment.list[[level]]
+  for (b in seq_along(cliques)) labels[cliques[[b]]] <- b
+  na_idx <- is.na(labels)
+  if (any(na_idx)) {
+    labels[na_idx] <- max(0L, labels, na.rm = TRUE) + seq_len(sum(na_idx))
+  }
+  as.integer(labels)
+}
+```
+
+```{r parity}
+fast <- moneca::moneca_fast(mob, segment.levels = 3, progress = FALSE)
+sbm  <- moneca_sbm(mob, backend = "greed", seed = 2026)
+
+fast_levels <- seq.int(2L, length(fast$segment.list))
+sbm_levels  <- seq.int(2L, length(sbm$segment.list))
+
+grid <- expand.grid(fast_lvl = fast_levels, sbm_lvl = sbm_levels)
+grid$ari <- mapply(function(lf, ls) ari(level_labels(fast, lf),
+                                        level_labels(sbm, ls)),
+                   grid$fast_lvl, grid$sbm_lvl)
+grid$nmi <- mapply(function(lf, ls) nmi(level_labels(fast, lf),
+                                        level_labels(sbm, ls)),
+                   grid$fast_lvl, grid$sbm_lvl)
+
+best <- grid[which.max(grid$ari), , drop = FALSE]
+best
+```
+
+On this 20-class synthetic fixture the best matching level pair
+typically recovers `ARI ~ 0.67` and `NMI ~ 0.90` — above the
+`ARI >= 0.55` threshold set as the aspirational target when the
+direction was planned, and strong empirical confirmation of the
+RR ≡ DC-SBM bridge.
+
+The match is not exact — and should not be. Clique enumeration and
+block-model inference are structurally different procedures: cliques
+insist on internal completeness at a threshold, blocks allow any
+stochastically-consistent edge pattern within a group. When the two
+agree on segmentation, the mobility data has sharply modular block
+structure; when they disagree, the discrepancy is itself diagnostic.
+
+## Choosing a backend
+
+| Criterion                       | `backend = "greed"`             | `backend = "graphtool"`                          |
+|---------------------------------|---------------------------------|--------------------------------------------------|
+| Runtime install cost            | `install.packages("greed")`     | conda env + `graph-tool` (~800 MB)               |
+| Scale ceiling (nodes)           | ~10^4 – 10^5                    | ~10^6 – 10^7                                     |
+| Sparse `dgCMatrix` input        | yes, end-to-end                 | via reticulate edge list                         |
+| Hierarchy construction          | merge dendrogram; `cut(sol,k)`  | nested MCMC, picks depth by MDL                  |
+| Determinism under `seed`        | high (deterministic local search)    | MCMC; use `n_init` best-of-N plus `seed`    |
+| Parallel                        | `future` framework, portable    | OpenMP; single-threaded recommended for `seed`   |
+| Portability                     | pure R                          | Python + conda                                   |
+
+Rule of thumb: use `greed` until you exceed roughly 5000 nodes, then
+move to `graphtool`. The `backend = "auto"` default encodes this rule
+and falls back to `greed` with an informational message if `graph-tool`
+is not installed.
+
+## Installing the `graph-tool` backend
+
+`graph-tool` is not distributed on PyPI, and the macOS homebrew formula
+compiles from source and breaks on Boost/Python version bumps. The
+supported route is conda-forge. `moneca_sbm_install_graphtool()` wraps
+the conda step:
+
+```r
+monecascale::moneca_sbm_install_graphtool(envname = "moneca-sbm")
+reticulate::use_condaenv("moneca-sbm", required = TRUE)
+```
+
+After this, `moneca_sbm(backend = "graphtool")` works identically to
+`"greed"`. A typical install takes 2–5 minutes on a warm conda cache.
+
+## Downstream compatibility
+
+Every moneca function that consumes a `moneca` object consumes a
+`monecascale::moneca_sbm()` output unchanged:
+
+```{r downstream-membership}
+moneca::segment.membership(seg)[1:6, ]
+```
+
+```{r downstream-plot-hier, fig.alt = "Hierarchical plot of SBM segmentation"}
+if (requireNamespace("ggraph", quietly = TRUE)) {
+  moneca::plot_moneca_hierarchical(seg, title = "monecascale - greed backend")
+}
+```
+
+```{r downstream-plot-ggraph, fig.alt = "Network plot of finest SBM level"}
+if (requireNamespace("ggraph", quietly = TRUE)) {
+  moneca::plot_moneca_ggraph(
+    seg, level = 2, node_color = "segment",
+    title = "monecascale - finest level"
+  )
+}
+```
+
+```{r downstream-dendro, fig.alt = "Dendrogram of SBM hierarchy", fig.height = 7}
+if (requireNamespace("ggraph", quietly = TRUE)) {
+  moneca::plot_moneca_dendrogram(seg)
+}
+```
+
+## Limitations and future directions
+
+`moneca_sbm()` is the first of seven directions in the MONECA scaling
+roadmap. Known limits on this release:
+
+- **Rectangular input is not accepted.** Person × employer matrices are
+  the target use case for direction **D1** (`moneca_bipartite()`);
+  `moneca_sbm()` currently errors on non-square input with a pointer
+  there.
+- **Auto-level unification** across backends (`segment.levels = "auto"`
+  everywhere including `moneca::moneca_fast()`) is direction **D6**.
+- **Out-of-core inference** for data that does not fit in RAM is
+  direction **D7** (`moneca_duckdb` / `moneca_arrow`).
+
+## References
+
+- Karrer, B., & Newman, M. E. J. (2011). Stochastic blockmodels and
+  community structure in networks. *Physical Review E*, 83, 016107.
+- Peixoto, T. P. (2014). Hierarchical block structures and
+  high-resolution model selection in large networks. *Physical Review X*,
+  4, 011047.
+- Côme, E., & Jouvin, N. (2020). `greed`: Clustering and Model Selection
+  with the Integrated Classification Likelihood. R package.
+- Touboel, J., & Larsen, A. G. (2017). Mapping the Social Class
+  Structure: From Occupational Mobility to Social Class Categories
+  Using Network Analysis. *Sociology*, 51(6), 1257–1276.
+
+```{r no-greed-note, echo = FALSE, eval = !have_greed}
+cat(
+  "Note: The `greed` package was not available when this vignette was built.\n",
+  "The code chunks above were not evaluated. Install `greed` with\n",
+  "install.packages('greed') to reproduce the parity experiment.\n",
+  sep = ""
+)
+```

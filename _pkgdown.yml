@@ -1,0 +1,31 @@
+url: https://gmontaletti.github.io/monecascale/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#0054AD"
+    base_font: {google: "Roboto"}
+
+development:
+  mode: auto
+
+home:
+  links:
+  - text: Companion package (moneca)
+    href: https://github.com/gmontaletti/MONECA
+  - text: Scaling roadmap
+    href: https://github.com/gmontaletti/MONECA/blob/master/reference/moneca/SCALING_ROADMAP.md
+
+reference:
+  - title: "Scalable Clustering Backends"
+    desc: "Alternative backends producing moneca-class output"
+    contents:
+      - moneca_sbm
+      - moneca_sbm_install_graphtool
+
+articles:
+  - title: "Getting Started"
+    desc: "Introduction to monecascale"
+    navbar: ~
+    contents:
+      - monecascale-sbm

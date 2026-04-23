@@ -1,0 +1,39 @@
+Package: monecascale
+Title: Scalable Backends for MONECA Mobility Clustering
+Description: Provides scalable clustering backends for the moneca package,
+    starting with hierarchical degree-corrected stochastic block model
+    (DC-SBM) inference via moneca_sbm(). Designed as a sibling package
+    that extends moneca beyond classification-scale mobility matrices
+    while reusing moneca's output contract and downstream analysis /
+    plotting stack. The load-bearing theoretical observation is that
+    moneca's relative-risk matrix RR = O / E is the DC-SBM residual
+    under identity block interaction, so SBM inference is a principled
+    scalable drop-in for the clique-enumeration step.
+Version: 0.1.0
+Maintainer: Giampaolo Montaletti <giampaolo.montaletti@gmail.com>
+Authors@R: c(
+    person("Giampaolo", "Montaletti",
+           email = "giampaolo.montaletti@gmail.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0002-5327-1122"))
+    )
+URL: https://github.com/gmontaletti/monecascale
+BugReports: https://github.com/gmontaletti/monecascale/issues
+Depends:
+  R (>= 3.5.0)
+Imports:
+  moneca,
+  Matrix,
+  stats
+Suggests:
+  greed (>= 0.6.2),
+  reticulate (>= 1.30),
+  testthat (>= 3.0.0),
+  knitr,
+  rmarkdown
+License: GPL-3
+Date: 2026-04-23
+RoxygenNote: 7.3.2
+VignetteBuilder: knitr
+Encoding: UTF-8
+Config/testthat/edition: 3
