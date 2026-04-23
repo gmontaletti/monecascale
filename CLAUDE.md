@@ -35,6 +35,11 @@ moneca’s analysis and plotting stack consumes the output unchanged.
     10^6+ nodes)
 - [`moneca_sbm_install_graphtool()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm_install_graphtool.md)
   — conda-forge install helper for the graphtool backend.
+- [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
+  — hierarchical bipartite co-clustering via
+  [`greed::DcLbm`](https://comeetie.github.io/greed/reference/DcLbm.html)
+  on rectangular RR. Returns `moneca_bipartite` wrapping two
+  moneca-class views (`$rows`, `$cols`). Shipped in 0.2.0.
 
 ## Planned directions (scaling roadmap)
 
@@ -42,7 +47,9 @@ Landed here unless otherwise noted. See
 `~/.claude/plans/monecascale-scaling-roadmap.md` and
 `~/.claude/projects/.../memory/scaling_directions.md`.
 
-- **D1** `moneca_bipartite()` — rectangular person × employer input.
+- ~~**D1**
+  [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)~~
+  — **SHIPPED 0.2.0**.
 - **D3** `moneca_flow()` — Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation,
   local Personalized PageRank expansion.
@@ -89,10 +96,19 @@ covr::package_coverage()
 - `R/sparse_internal.R` — local copies of two internal moneca helpers
   (`segment_matrix_sparse`, `sparse_pmin_symmetric`). Avoid calling
   `moneca:::` from this package.
+- `R/moneca_bipartite.R` — public
+  [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
+  entry + backend dispatcher.
+- `R/bipartite_backend_greed.R` — greed DcLbm backend.
+- `R/bipartite_utils.R` — rectangular RR, one-mode projection, adapter.
+- `R/bipartite_methods.R` — `print` / `summary` / `format` for
+  `moneca_bipartite`.
 - `tests/testthat/helper-test-data.R` — shared generators wrapping
   [`moneca::generate_mobility_data()`](https://gmontaletti.github.io/MONECA/reference/generate_mobility_data.html).
 - `vignettes/monecascale-sbm.Rmd` — RR ≡ DC-SBM bridge walkthrough and
   parity experiment.
+- `vignettes/monecascale-bipartite.Rmd` — bipartite walkthrough +
+  recovery experiment.
 
 ## Coding conventions
 

@@ -12,8 +12,8 @@
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Scalable Backends for MONECA Mobility Clustering">
-<meta name="description" content="Provides scalable clustering backends for the moneca package, starting with hierarchical degree-corrected stochastic block model (DC-SBM) inference via moneca_sbm(). Designed as a sibling package that extends moneca beyond classification-scale mobility matrices while reusing monecas output contract and downstream analysis / plotting stack. The load-bearing theoretical observation is that monecas relative-risk matrix RR = O / E is the DC-SBM residual under identity block interaction, so SBM inference is a principled scalable drop-in for the clique-enumeration step.">
-<meta property="og:description" content="Provides scalable clustering backends for the moneca package, starting with hierarchical degree-corrected stochastic block model (DC-SBM) inference via moneca_sbm(). Designed as a sibling package that extends moneca beyond classification-scale mobility matrices while reusing monecas output contract and downstream analysis / plotting stack. The load-bearing theoretical observation is that monecas relative-risk matrix RR = O / E is the DC-SBM residual under identity block interaction, so SBM inference is a principled scalable drop-in for the clique-enumeration step.">
+<meta name="description" content="Provides scalable clustering backends for the moneca package, starting with hierarchical degree-corrected stochastic block model (DC-SBM) inference via moneca_sbm(), and bipartite / rectangular clustering via moneca_bipartite(). Designed as a sibling package that extends moneca beyond classification-scale mobility matrices while reusing monecas output contract and downstream analysis / plotting stack. The load-bearing theoretical observation is that monecas relative-risk matrix RR = O / E is the DC-SBM residual under identity block interaction, so SBM inference is a principled scalable drop-in for the clique-enumeration step. For two-mode (rectangular) data, moneca_bipartite() extends this to the degree-corrected Latent Block Model (DcLbm) on scaled-rounded RR.">
+<meta property="og:description" content="Provides scalable clustering backends for the moneca package, starting with hierarchical degree-corrected stochastic block model (DC-SBM) inference via moneca_sbm(), and bipartite / rectangular clustering via moneca_bipartite(). Designed as a sibling package that extends moneca beyond classification-scale mobility matrices while reusing monecas output contract and downstream analysis / plotting stack. The load-bearing theoretical observation is that monecas relative-risk matrix RR = O / E is the DC-SBM residual under identity block interaction, so SBM inference is a principled scalable drop-in for the clique-enumeration step. For two-mode (rectangular) data, moneca_bipartite() extends this to the degree-corrected Latent Block Model (DcLbm) on scaled-rounded RR.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/monecascale-sbm.html">monecascale: hierarchical DC-SBM backend for MONECA</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -128,7 +130,7 @@
 <li>
 <strong>D2</strong> — hierarchical DC-SBM (<code>moneca_sbm</code>, <em>shipped</em>).</li>
 <li>
-<strong>D1</strong> — bipartite / two-mode (<code>moneca_bipartite</code>, planned).</li>
+<strong>D1</strong> — bipartite / two-mode (<code>moneca_bipartite</code>, <em>shipped</em>).</li>
 <li>
 <strong>D3</strong> — flow-based (<code>moneca_flow</code> via Infomap, planned).</li>
 <li>
@@ -145,7 +147,7 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <pre><code>Montaletti, G. (2026). monecascale: Scalable Backends for MONECA.
-R package version 0.1.0. https://github.com/gmontaletti/monecascale
+R package version 0.2.0. https://github.com/gmontaletti/monecascale
 
 Montaletti, G. (2026). moneca: Mobility Network Clustering Analysis.
 R package version 1.8.0. https://github.com/gmontaletti/MONECA

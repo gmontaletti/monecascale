@@ -1,5 +1,58 @@
 # Changelog
 
+## monecascale 0.2.0
+
+### New features
+
+- [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
+  — D1 of the scaling roadmap. Accepts rectangular person × employer (or
+  worker × occupation, etc.) mobility matrices and returns an S3 object
+  of class `"moneca_bipartite"` wrapping two linked `moneca`-class
+  objects (`$rows`, `$cols`) plus a `$bipartite_diagnostics` slot
+  carrying the joint ICL/MDL trace, per-level block counts per side,
+  rectangular RR, and per-level `Krow × Kcol` block-interaction
+  matrices.
+- Single backend:
+  [`greed::DcLbm`](https://comeetie.github.io/greed/reference/DcLbm.html)
+  (hierarchical Poisson latent block model). Scales to ~10^(4–10)5 rows
+  / cols per side.
+- Output contract: each of `$rows` and `$cols` is consumable unchanged
+  by
+  [`moneca::segment.membership()`](https://gmontaletti.github.io/MONECA/reference/segment.membership.html),
+  [`moneca::segment.quality()`](https://gmontaletti.github.io/MONECA/reference/segment.quality.html),
+  [`moneca::plot_moneca_ggraph()`](https://gmontaletti.github.io/MONECA/reference/plot_moneca_ggraph.html),
+  [`moneca::plot_moneca_hierarchical()`](https://gmontaletti.github.io/MONECA/reference/plot_moneca_hierarchical.html).
+
+### Theoretical note
+
+Rectangular RR = O / ((row · col) / total) is the DcLbm residual under
+identity block interaction, extending the RR ≡ DC-SBM bridge from D2.
+[`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
+fits DcLbm on scaled-rounded RR and projects each side via one-mode RR
+aggregation with `D_other_margin^{-1}` normalisation.
+
+### Empirical validation
+
+On a 60 × 40 synthetic bipartite fixture with 3 latent row blocks and 2
+latent col blocks (seed 2026): - rows: ARI = 0.563, NMI = 0.761 - cols:
+ARI = 1.000, NMI = 1.000
+
+See `tests/testthat/test-bipartite-parity.R`.
+
+### Dependencies
+
+- Added `mclust` to `Suggests` for the parity test’s ARI computation.
+- No new `Imports`. `greed` remains `Suggests`.
+
+### Open gaps
+
+- Isolates summary on the bipartite side (zero-degree rows / cols) is
+  deferred to 0.2.1.
+- Graphtool bipartite backend (via `pclabel`) reserved for scale ≥ 10^5
+  per side.
+
+------------------------------------------------------------------------
+
 ## monecascale 0.1.0
 
 ### Initial release

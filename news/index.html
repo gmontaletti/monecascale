@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,6 +19,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/monecascale-sbm.html">monecascale: hierarchical DC-SBM backend for MONECA</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -36,6 +38,35 @@
       <small>Source: <a href="https://github.com/gmontaletti/monecascale/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="monecascale-020">monecascale 0.2.0<a class="anchor" aria-label="anchor" href="#monecascale-020"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/moneca_bipartite.html">moneca_bipartite()</a></code> — D1 of the scaling roadmap. Accepts rectangular person × employer (or worker × occupation, etc.) mobility matrices and returns an S3 object of class <code>"moneca_bipartite"</code> wrapping two linked <code>moneca</code>-class objects (<code>$rows</code>, <code>$cols</code>) plus a <code>$bipartite_diagnostics</code> slot carrying the joint ICL/MDL trace, per-level block counts per side, rectangular RR, and per-level <code>Krow × Kcol</code> block-interaction matrices.</li>
+<li>Single backend: <code><a href="https://comeetie.github.io/greed/reference/DcLbm.html" class="external-link">greed::DcLbm</a></code> (hierarchical Poisson latent block model). Scales to ~10<sup>4–10</sup>5 rows / cols per side.</li>
+<li>Output contract: each of <code>$rows</code> and <code>$cols</code> is consumable unchanged by <code><a href="https://gmontaletti.github.io/MONECA/reference/segment.membership.html" class="external-link">moneca::segment.membership()</a></code>, <code><a href="https://gmontaletti.github.io/MONECA/reference/segment.quality.html" class="external-link">moneca::segment.quality()</a></code>, <code><a href="https://gmontaletti.github.io/MONECA/reference/plot_moneca_ggraph.html" class="external-link">moneca::plot_moneca_ggraph()</a></code>, <code><a href="https://gmontaletti.github.io/MONECA/reference/plot_moneca_hierarchical.html" class="external-link">moneca::plot_moneca_hierarchical()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="theoretical-note-0-2-0">Theoretical note<a class="anchor" aria-label="anchor" href="#theoretical-note-0-2-0"></a></h3>
+<p>Rectangular RR = O / ((row · col) / total) is the DcLbm residual under identity block interaction, extending the RR ≡ DC-SBM bridge from D2. <code><a href="../reference/moneca_bipartite.html">moneca_bipartite()</a></code> fits DcLbm on scaled-rounded RR and projects each side via one-mode RR aggregation with <code>D_other_margin^{-1}</code> normalisation.</p>
+</div>
+<div class="section level3">
+<h3 id="empirical-validation-0-2-0">Empirical validation<a class="anchor" aria-label="anchor" href="#empirical-validation-0-2-0"></a></h3>
+<p>On a 60 × 40 synthetic bipartite fixture with 3 latent row blocks and 2 latent col blocks (seed 2026): - rows: ARI = 0.563, NMI = 0.761 - cols: ARI = 1.000, NMI = 1.000</p>
+<p>See <code>tests/testthat/test-bipartite-parity.R</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="dependencies-0-2-0">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-0-2-0"></a></h3>
+<ul><li>Added <code>mclust</code> to <code>Suggests</code> for the parity test’s ARI computation.</li>
+<li>No new <code>Imports</code>. <code>greed</code> remains <code>Suggests</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="open-gaps-0-2-0">Open gaps<a class="anchor" aria-label="anchor" href="#open-gaps-0-2-0"></a></h3>
+<ul><li>Isolates summary on the bipartite side (zero-degree rows / cols) is deferred to 0.2.1.</li>
+<li>Graphtool bipartite backend (via <code>pclabel</code>) reserved for scale ≥ 10^5 per side.</li>
+</ul><hr></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="monecascale-010">monecascale 0.1.0<a class="anchor" aria-label="anchor" href="#monecascale-010"></a></h2>
 <div class="section level3">

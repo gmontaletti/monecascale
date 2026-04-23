@@ -467,7 +467,8 @@ is the first of seven directions in the MONECA scaling roadmap. Known
 limits on this release:
 
 - **Rectangular input is not accepted.** Person × employer matrices are
-  the target use case for direction **D1** (`moneca_bipartite()`);
+  the target use case for direction **D1**
+  ([`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md));
   [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
   currently errors on non-square input with a pointer there.
 - **Auto-level unification** across backends (`segment.levels = "auto"`
