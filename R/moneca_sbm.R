@@ -42,10 +42,16 @@
 #' @param symmetric_method One of \code{"sum"} (default; \code{mx + t(mx)}),
 #'   \code{"min"} (\code{2 * pmin(mx, t(mx))}, down-weights one-way flows),
 #'   or \code{"none"} (keep directed). Applied to the core before SBM.
-#' @param segment.levels Integer or \code{NULL}. If \code{NULL} (default),
-#'   all hierarchy levels produced by the backend (from K_final down to 2)
-#'   are returned. If an integer, the hierarchy is truncated to that many
-#'   approximately log-spaced levels.
+#' @param segment.levels Integer, \code{NULL}, or the string \code{"auto"}.
+#'   If \code{NULL} (default), all hierarchy levels produced by the backend
+#'   (from K_final down to 2) are returned. If an integer, the hierarchy is
+#'   truncated to that many approximately log-spaced levels. If
+#'   \code{"auto"}, the full hierarchy is fit and then
+#'   \code{\link{auto_segment_levels}} picks a single preferred level via
+#'   \code{auto_method}; the object is trimmed to that level and carries
+#'   the picker result under \code{$auto_level}.
+#' @param auto_method One of \code{"mdl"} (default) or \code{"mi_plateau"}.
+#'   Ignored unless \code{segment.levels = "auto"}.
 #' @param max_K Integer or \code{NULL}. Upper bound on number of blocks at
 #'   the finest level (greed backend only). Defaults to
 #'   \code{max(20, n_core / 5)}.
@@ -89,6 +95,7 @@ moneca_sbm <- function(
   small.cell.reduction = 0,
   symmetric_method = c("sum", "min", "none"),
   segment.levels = NULL,
+  auto_method = c("mdl", "mi_plateau"),
   max_K = NULL,
   isolates = FALSE,
   has_margins = "auto",
@@ -100,6 +107,11 @@ moneca_sbm <- function(
   backend <- match.arg(backend)
   edge_model <- match.arg(edge_model)
   symmetric_method <- match.arg(symmetric_method)
+  auto_method <- match.arg(auto_method)
+
+  # 0. Auto-level gate ------------------------------------------------------
+  auto_mode <- identical(segment.levels, "auto")
+  segment.levels_for_fit <- if (auto_mode) NULL else segment.levels
 
   # 1. Margin handling ------------------------------------------------------
   mx_info <- .ensure_margins_sbm(mx, has_margins = has_margins)
@@ -160,9 +172,16 @@ moneca_sbm <- function(
     small.cell.reduction = small.cell.reduction,
     margins_added = margins_added,
     symmetric_method = symmetric_method,
-    segment.levels = segment.levels,
+    segment.levels = segment.levels_for_fit,
     isolates = isolates
   )
+
+  # 6. Post-hoc auto-level selection ---------------------------------------
+  if (auto_mode) {
+    picked <- auto_segment_levels(out, method = auto_method)
+    out <- .trim_moneca_to_level(out, picked$level)
+    out$auto_level <- picked
+  }
 
   out
 }

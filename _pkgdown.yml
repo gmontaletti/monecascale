@@ -33,6 +33,15 @@ reference:
       - print.moneca_bipartite
       - summary.moneca_bipartite
       - print.summary.moneca_bipartite
+  - title: "Auto-level Selection"
+    desc: >
+      Post-hoc selection of a hierarchy level from a moneca_sbm or
+      moneca_bipartite fit via MDL elbow or level-to-level MI plateau.
+      Composes with the segment.levels = "auto" wrapper on both backends.
+    contents:
+      - auto_segment_levels
+      - print.auto_segment_levels
+      - format.auto_segment_levels
 
 articles:
   - title: "Getting Started"
@@ -44,3 +53,7 @@ articles:
     desc: "Rectangular mobility, RR = DcLbm residual, hierarchical co-clustering."
     contents:
       - monecascale-bipartite
+  - title: "Auto Level Selection"
+    desc: "MDL + MI plateau criteria for picking the right level post-hoc."
+    contents:
+      - monecascale-auto-level

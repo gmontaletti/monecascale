@@ -268,8 +268,11 @@
   P_full,
   side_names,
   small.cell.reduction,
-  margin_policy
+  margin_policy,
+  side_name = c("rows", "cols"),
+  diag_side = NULL
 ) {
+  side_name <- match.arg(side_name)
   n_side <- length(side_names)
   segment_list <- vector("list", length(memberships_side) + 1L)
   segment_list[[1]] <- as.list(seq_len(n_side))
@@ -295,6 +298,10 @@
     symmetric_method = "sum"
   )
   class(obj) <- "moneca"
+  obj$bipartite_origin <- side_name
+  if (!is.null(diag_side)) {
+    obj$bipartite_diagnostics_side <- diag_side
+  }
   obj$segment_metadata <- moneca::moneca_segments(obj)
   obj
 }
@@ -352,23 +359,41 @@
     P_col_full <- P_col
   }
 
-  # 8c. Build each side's moneca-class object ------------------------------
+  # 8c. Per-side slim diagnostics slice ------------------------------------
+  joint_icl <- fit$joint_icl_per_level
+  joint_mdl <- -joint_icl
+  diag_row <- list(
+    joint_icl_per_level = joint_icl,
+    joint_mdl_per_level = joint_mdl,
+    n_blocks_per_level = fit$n_blocks_row
+  )
+  diag_col <- list(
+    joint_icl_per_level = joint_icl,
+    joint_mdl_per_level = joint_mdl,
+    n_blocks_per_level = fit$n_blocks_col
+  )
+
+  # 8d. Build each side's moneca-class object ------------------------------
   rows_obj <- .build_side_moneca(
     memberships_side = fit$memberships_row,
     P_full = P_row_full,
     side_names = row_names,
     small.cell.reduction = small.cell.reduction,
-    margin_policy = margin_policy
+    margin_policy = margin_policy,
+    side_name = "rows",
+    diag_side = diag_row
   )
   cols_obj <- .build_side_moneca(
     memberships_side = fit$memberships_col,
     P_full = P_col_full,
     side_names = col_names,
     small.cell.reduction = small.cell.reduction,
-    margin_policy = margin_policy
+    margin_policy = margin_policy,
+    side_name = "cols",
+    diag_side = diag_col
   )
 
-  # 8d. Per-level block-interaction matrices -------------------------------
+  # 8e. Per-level block-interaction matrices -------------------------------
   n_levels <- length(fit$memberships_row)
   block_interaction <- vector("list", n_levels)
   for (lvl in seq_len(n_levels)) {
@@ -379,7 +404,7 @@
     )
   }
 
-  # 8e. Diagnostics slot ----------------------------------------------------
+  # 8f. Diagnostics slot ----------------------------------------------------
   bipartite_diagnostics <- list(
     backend = fit$backend %||% "greed",
     model = fit$model %||% "DcLbm",

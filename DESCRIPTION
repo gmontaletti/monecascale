@@ -1,18 +1,22 @@
 Package: monecascale
 Title: Scalable Backends for MONECA Mobility Clustering
 Description: Provides scalable clustering backends for the moneca package,
-    starting with hierarchical degree-corrected stochastic block model
-    (DC-SBM) inference via moneca_sbm(), and bipartite / rectangular
-    clustering via moneca_bipartite(). Designed as a sibling package
-    that extends moneca beyond classification-scale mobility matrices
-    while reusing moneca's output contract and downstream analysis /
-    plotting stack. The load-bearing theoretical observation is that
-    moneca's relative-risk matrix RR = O / E is the DC-SBM residual
-    under identity block interaction, so SBM inference is a principled
-    scalable drop-in for the clique-enumeration step. For two-mode
-    (rectangular) data, moneca_bipartite() extends this to the
-    degree-corrected Latent Block Model (DcLbm) on scaled-rounded RR.
-Version: 0.2.0
+    including hierarchical degree-corrected stochastic block model
+    (DC-SBM) inference via moneca_sbm(), bipartite / rectangular
+    clustering via moneca_bipartite(), and post-hoc hierarchy-level
+    auto-selection via auto_segment_levels() (MDL elbow or mutual
+    information plateau). Version 0.3.0 adds auto_segment_levels() for
+    automatic stopping-rule selection from fully-fitted hierarchies.
+    Designed as a sibling package that extends moneca beyond
+    classification-scale mobility matrices while reusing moneca's output
+    contract and downstream analysis / plotting stack. The load-bearing
+    theoretical observation is that moneca's relative-risk matrix RR =
+    O / E is the DC-SBM residual under identity block interaction, so
+    SBM inference is a principled scalable drop-in for the
+    clique-enumeration step. For two-mode (rectangular) data,
+    moneca_bipartite() extends this to the degree-corrected Latent Block
+    Model (DcLbm) on scaled-rounded RR.
+Version: 0.3.0
 Maintainer: Giampaolo Montaletti <giampaolo.montaletti@gmail.com>
 Authors@R: c(
     person("Giampaolo", "Montaletti",

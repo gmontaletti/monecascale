@@ -52,10 +52,17 @@
 #'   each one-mode projection, matching moneca's convention) or `"none"`
 #'   (skip appending margins). `"row_col"` is the load-bearing choice
 #'   for downstream moneca compatibility.
-#' @param segment.levels Integer or `NULL`. If `NULL` (default), all
-#'   hierarchy levels produced by the backend (from the finest joint `K`
-#'   down to `2`) are returned. If an integer, the hierarchy is truncated
-#'   to that many approximately log-spaced levels.
+#' @param segment.levels Integer, `NULL`, or the string `"auto"`. If `NULL`
+#'   (default), all hierarchy levels produced by the backend (from the
+#'   finest joint `K` down to `2`) are returned. If an integer, the
+#'   hierarchy is truncated to that many approximately log-spaced levels.
+#'   If `"auto"`, the full hierarchy is fit and then
+#'   [auto_segment_levels()] picks a preferred level **independently per
+#'   side**; `$rows` and `$cols` are trimmed accordingly and each carries
+#'   the picker result under `$auto_level`. The two sides may end up at
+#'   different levels.
+#' @param auto_method One of `"mdl"` (default) or `"mi_plateau"`. Ignored
+#'   unless `segment.levels = "auto"`.
 #' @param max_K Integer or `NULL`. Reserved for backend-specific caps; the
 #'   `greed` backend currently uses its internal default.
 #' @param seed Integer seed for reproducible inference.
@@ -115,6 +122,7 @@ moneca_bipartite <- function(
   small.cell.reduction = 0,
   margin_policy = c("row_col", "none"),
   segment.levels = NULL,
+  auto_method = c("mdl", "mi_plateau"),
   max_K = NULL,
   seed = NULL,
   n_init = 1L,
@@ -123,6 +131,11 @@ moneca_bipartite <- function(
   ...
 ) {
   margin_policy <- match.arg(margin_policy)
+  auto_method <- match.arg(auto_method)
+
+  # 0. Auto-level gate ------------------------------------------------------
+  auto_mode <- identical(segment.levels, "auto")
+  segment.levels_for_fit <- if (auto_mode) NULL else segment.levels
 
   # 1. Reserved-arg sanity --------------------------------------------------
   if (!isTRUE(deg_corr)) {
@@ -185,7 +198,7 @@ moneca_bipartite <- function(
       seed = seed,
       n_init = n_init,
       max_K = max_K,
-      segment.levels = segment.levels,
+      segment.levels = segment.levels_for_fit,
       verbose = verbose,
       ...
     )
@@ -201,10 +214,20 @@ moneca_bipartite <- function(
     verbose = verbose
   )
 
+  # 8. Post-hoc per-side auto-level selection -------------------------------
+  if (auto_mode) {
+    picked_rows <- auto_segment_levels(out$rows, method = auto_method)
+    picked_cols <- auto_segment_levels(out$cols, method = auto_method)
+    out$rows <- .trim_moneca_to_level(out$rows, picked_rows$level)
+    out$cols <- .trim_moneca_to_level(out$cols, picked_cols$level)
+    out$rows$auto_level <- picked_rows
+    out$cols$auto_level <- picked_cols
+  }
+
   out
 }
 
-# 8. Backend resolution -------------------------------------------------------
+# 9. Backend resolution -------------------------------------------------------
 
 .resolve_bipartite_backend <- function(backend) {
   if (!is.character(backend) || length(backend) != 1L) {

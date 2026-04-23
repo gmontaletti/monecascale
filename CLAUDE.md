@@ -24,16 +24,19 @@ Every exported entry point returns a `moneca`-class S3 object, so moneca's analy
 - `moneca_bipartite()` — hierarchical bipartite co-clustering via `greed::DcLbm`
   on rectangular RR. Returns `moneca_bipartite` wrapping two moneca-class views
   (`$rows`, `$cols`). Shipped in 0.2.0.
+- `auto_segment_levels()` — post-hoc hierarchy-level selection via MDL elbow
+  or mutual information plateau; also available as `segment.levels = "auto"`
+  on `moneca_sbm()` and `moneca_bipartite()`. Shipped in 0.3.0.
 
 ## Planned directions (scaling roadmap)
 
 Landed here unless otherwise noted. See `~/.claude/plans/monecascale-scaling-roadmap.md` and `~/.claude/projects/.../memory/scaling_directions.md`.
 
 - ~~**D1** `moneca_bipartite()`~~ — **SHIPPED 0.2.0**.
+- ~~**D6** `auto_segment_levels()`~~ — **SHIPPED 0.3.0** for SBM and bipartite. moneca_fast() support pending 0.3.1.
 - **D3** `moneca_flow()` — Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.
 - **D5** `moneca_nmf()` — Poisson NMF.
-- **D6** `auto_segment_levels()` — auto-stopping criteria (MDL, stability, plateau). Composes with moneca's `moneca_fast()` too — may partly live in moneca.
 - **D7** `moneca_duckdb()` / `moneca_arrow()` — out-of-core / streaming backend.
 
 ## Package Development Commands
@@ -70,9 +73,13 @@ covr::package_coverage()
 - `R/bipartite_backend_greed.R` — greed DcLbm backend.
 - `R/bipartite_utils.R` — rectangular RR, one-mode projection, adapter.
 - `R/bipartite_methods.R` — `print` / `summary` / `format` for `moneca_bipartite`.
+- `R/auto_segment_levels.R` — public `auto_segment_levels()` entry + dispatcher + trim helper.
+- `R/auto_level_criteria.R` — MDL (kneedle / max_second_diff) and MI-plateau criteria.
+- `R/auto_level_methods.R` — `print` / `format` for `auto_segment_levels`.
 - `tests/testthat/helper-test-data.R` — shared generators wrapping `moneca::generate_mobility_data()`.
 - `vignettes/monecascale-sbm.Rmd` — RR ≡ DC-SBM bridge walkthrough and parity experiment.
 - `vignettes/monecascale-bipartite.Rmd` — bipartite walkthrough + recovery experiment.
+- `vignettes/monecascale-auto-level.Rmd` — auto-level walkthrough.
 
 ## Coding conventions
 
