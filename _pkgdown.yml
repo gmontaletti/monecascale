@@ -22,6 +22,17 @@ reference:
     contents:
       - moneca_sbm
       - moneca_sbm_install_graphtool
+  - title: "Bipartite Segmentation"
+    desc: >
+      Rectangular input (person x employer, worker x occupation).
+      Returns two linked moneca-class objects - one row-view, one col-view -
+      each consumable by moneca's segment.*() and plot_moneca_*() stack.
+    contents:
+      - moneca_bipartite
+      - format.moneca_bipartite
+      - print.moneca_bipartite
+      - summary.moneca_bipartite
+      - print.summary.moneca_bipartite
 
 articles:
   - title: "Getting Started"
@@ -29,3 +40,7 @@ articles:
     navbar: ~
     contents:
       - monecascale-sbm
+  - title: "Bipartite Segmentation"
+    desc: "Rectangular mobility, RR = DcLbm residual, hierarchical co-clustering."
+    contents:
+      - monecascale-bipartite

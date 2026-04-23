@@ -63,7 +63,7 @@ See `vignette("monecascale-sbm")` for the RR ≡ DC-SBM residual walkthrough, th
 `monecascale` is the home for the following scaling directions from the [MONECA Scaling Roadmap](https://github.com/gmontaletti/MONECA/blob/master/reference/moneca/SCALING_ROADMAP.md):
 
 - **D2** — hierarchical DC-SBM (`moneca_sbm`, *shipped*).
-- **D1** — bipartite / two-mode (`moneca_bipartite`, planned).
+- **D1** — bipartite / two-mode (`moneca_bipartite`, *shipped*).
 - **D3** — flow-based (`moneca_flow` via Infomap, planned).
 - **D4** — scalable clique guardrail (`moneca_localclique`, planned).
 - **D5** — Poisson NMF (`moneca_nmf`, planned).
@@ -74,7 +74,7 @@ See `vignette("monecascale-sbm")` for the RR ≡ DC-SBM residual walkthrough, th
 
 ```
 Montaletti, G. (2026). monecascale: Scalable Backends for MONECA.
-R package version 0.1.0. https://github.com/gmontaletti/monecascale
+R package version 0.2.0. https://github.com/gmontaletti/monecascale
 
 Montaletti, G. (2026). moneca: Mobility Network Clustering Analysis.
 R package version 1.8.0. https://github.com/gmontaletti/MONECA

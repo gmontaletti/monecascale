@@ -21,12 +21,15 @@ Every exported entry point returns a `moneca`-class S3 object, so moneca's analy
   - `"greed"` (default, R-native, sparse `dgCMatrix`, scales to ~10^4–10^5 nodes)
   - `"graphtool"` (Python via reticulate; conda-forge install; scales to 10^6+ nodes)
 - `moneca_sbm_install_graphtool()` — conda-forge install helper for the graphtool backend.
+- `moneca_bipartite()` — hierarchical bipartite co-clustering via `greed::DcLbm`
+  on rectangular RR. Returns `moneca_bipartite` wrapping two moneca-class views
+  (`$rows`, `$cols`). Shipped in 0.2.0.
 
 ## Planned directions (scaling roadmap)
 
 Landed here unless otherwise noted. See `~/.claude/plans/monecascale-scaling-roadmap.md` and `~/.claude/projects/.../memory/scaling_directions.md`.
 
-- **D1** `moneca_bipartite()` — rectangular person × employer input.
+- ~~**D1** `moneca_bipartite()`~~ — **SHIPPED 0.2.0**.
 - **D3** `moneca_flow()` — Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.
 - **D5** `moneca_nmf()` — Poisson NMF.
@@ -63,8 +66,13 @@ covr::package_coverage()
 - `R/sbm_backend_graphtool.R` — Python/graph-tool backend + install helper.
 - `R/sbm_utils.R` — shared preprocessing (margins, symmetry, diagonal zeroing) and the `.sbm_fit_to_moneca()` adapter.
 - `R/sparse_internal.R` — local copies of two internal moneca helpers (`segment_matrix_sparse`, `sparse_pmin_symmetric`). Avoid calling `moneca:::` from this package.
+- `R/moneca_bipartite.R` — public `moneca_bipartite()` entry + backend dispatcher.
+- `R/bipartite_backend_greed.R` — greed DcLbm backend.
+- `R/bipartite_utils.R` — rectangular RR, one-mode projection, adapter.
+- `R/bipartite_methods.R` — `print` / `summary` / `format` for `moneca_bipartite`.
 - `tests/testthat/helper-test-data.R` — shared generators wrapping `moneca::generate_mobility_data()`.
 - `vignettes/monecascale-sbm.Rmd` — RR ≡ DC-SBM bridge walkthrough and parity experiment.
+- `vignettes/monecascale-bipartite.Rmd` — bipartite walkthrough + recovery experiment.
 
 ## Coding conventions
 

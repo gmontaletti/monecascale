@@ -1,0 +1,351 @@
+---
+title: "Bipartite Segmentation with moneca_bipartite()"
+author: "Giampaolo Montaletti"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    fig_width: 8
+    fig_height: 6
+vignette: >
+  %\VignetteIndexEntry{monecascale-bipartite}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150,
+  out.width = "100%"
+)
+
+# Eval-gate on greed (Suggests). If missing, skip evaluation and still
+# render a readable article.
+greed_available <- requireNamespace("greed", quietly = TRUE)
+if (!greed_available) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
+```
+
+## 1. Introduction
+
+`moneca_bipartite()` extends the MONECA analysis stack to rectangular
+(two-mode) mobility data, where rows and columns are distinct entity
+types. Typical use cases are person x employer, worker x occupation,
+and student x school tables. The square mobility matrix that
+`moneca::moneca_fast()` and `monecascale::moneca_sbm()` operate on is
+already a one-mode aggregation; bipartite input preserves individual
+row and column identity and lets the block model infer groups on both
+sides jointly.
+
+This vignette is the rectangular counterpart of
+`vignette("monecascale-sbm", package = "monecascale")`: the square
+case motivates why relative risk is the DC-SBM residual, this one
+motivates why the same argument carries over to the Latent Block Model
+(LBM) and how the joint row / column clustering is exposed to moneca's
+downstream `segment.*()` and `plot_moneca_*()` APIs.
+
+## 2. Theoretical bridge: rectangular RR as DcLbm residual
+
+MONECA's weight is the relative-risk deviation of observed mobility
+from the independence null. For a rectangular core `O` with row
+margins `r`, column margins `c`, and grand total `N`:
+
+$$
+RR_{ij} = \frac{O_{ij}}{E_{ij}}, \qquad E_{ij} = \frac{r_i \cdot c_j}{N}.
+$$
+
+The degree-corrected Latent Block Model (DcLbm, Come et al. 2021)
+models the expected edge count between row `i` in row-block `g` and
+column `j` in column-block `h` as
+`theta_i^row * theta_j^col * omega_{g,h}`, with `theta` degree
+parameters and `omega` the row-block by column-block interaction
+matrix. Setting `omega` to the all-ones matrix recovers exactly
+`(r_i c_j) / N`, i.e. MONECA's independence null. DcLbm inference on
+the rectangular mobility is therefore the principled scalable drop-in
+for clique enumeration on the bipartite case, in the same way that
+DcSbm is for the unipartite case covered in `monecascale-sbm`.
+
+The current backend is `greed::DcLbm`, an R-native hierarchical
+implementation built on Integrated Classification Likelihood with
+merge-split local search. A `"graphtool"` backend via
+`graph_tool.inference.minimize_blockmodel_dl(pclabel = ...)` is
+reserved for scale beyond 10^5 per side.
+
+## 3. Quick start
+
+```{r quick-start}
+library(monecascale)
+
+# 1. synthetic rectangular fixture -----
+set.seed(2026)
+n_row <- 60
+n_col <- 40
+row_block <- rep(1:4, length.out = n_row)
+col_block <- rep(1:3, length.out = n_col)
+# block-constant Poisson intensities: diagonal-ish structure
+lambda <- outer(row_block, col_block, function(g, h) {
+  ifelse((g - 1) %% 3 + 1 == h, 6, 1)
+})
+mx <- matrix(stats::rpois(n_row * n_col, lambda = lambda), n_row, n_col)
+rownames(mx) <- paste0("R", seq_len(n_row))
+colnames(mx) <- paste0("C", seq_len(n_col))
+
+# 2. fit -----
+out <- monecascale::moneca_bipartite(mx, seed = 2026, verbose = FALSE)
+
+# 3. inspect -----
+out
+summary(out)
+out$bipartite_diagnostics$n_blocks_row_per_level
+out$bipartite_diagnostics$n_blocks_col_per_level
+```
+
+The `print.moneca_bipartite()` method shows the per-level table of row
+block count, column block count, and joint ICL. `summary()` adds the
+backend metadata block (`n_init`, `rr_scale`, margin status).
+
+## 4. Output anatomy
+
+`moneca_bipartite()` returns an object of class `"moneca_bipartite"`
+(disjoint from `"moneca"`) with three slots: `$rows`, `$cols`, and
+`$bipartite_diagnostics`. The first two are full moneca-class objects
+built from one-mode projections of the rectangular RR. The third
+retains the joint bipartite information that a single square object
+cannot represent.
+
+```{r classes}
+class(out)
+class(out$rows)
+class(out$cols)
+```
+
+The row view is a square, symmetric, zero-diagonal matrix on `n_row`
+entities; the column view is square on `n_col`. Margins are appended
+as the last row and column, matching moneca's convention.
+
+```{r shapes}
+dim(out$rows$mat.list[[1]])
+dim(out$cols$mat.list[[1]])
+isSymmetric(as.matrix(out$rows$mat.list[[1]]))
+```
+
+The diagnostics slot exposes the joint structure:
+
+```{r diagnostics}
+str(out$bipartite_diagnostics, max.level = 1)
+out$bipartite_diagnostics$n_blocks_row_per_level
+out$bipartite_diagnostics$n_blocks_col_per_level
+round(out$bipartite_diagnostics$joint_icl_per_level, 2)
+```
+
+`block_interaction_matrix_per_level` is a list of `Krow x Kcol`
+matrices, one per hierarchy level, cross-tabulating the rectangular
+core by row and column memberships. Level 1 is finest.
+
+```{r joint-matrix}
+bim <- out$bipartite_diagnostics$block_interaction_matrix_per_level
+length(bim)
+dim(bim[[1]])
+round(bim[[1]], 1)
+```
+
+## 5. Downstream compatibility
+
+Because `$rows` and `$cols` are full moneca-class objects, the entire
+moneca consumer API runs on them unchanged. The two views are queried
+independently: the row view answers questions about how row entities
+cluster given their column-mediated co-movement, and symmetrically for
+the column view.
+
+```{r downstream-membership}
+head(moneca::segment.membership(out$rows))
+head(moneca::segment.membership(out$cols))
+```
+
+```{r downstream-quality}
+moneca::segment.quality(out$rows)
+moneca::segment.quality(out$cols)
+```
+
+```{r downstream-ggraph-rows, fig.alt = "Row-view network plot"}
+if (requireNamespace("ggraph", quietly = TRUE)) {
+  moneca::plot_moneca_ggraph(
+    out$rows,
+    level = 2,
+    node_color = "segment",
+    title = "moneca_bipartite - row view"
+  )
+}
+```
+
+```{r downstream-hier-cols, fig.alt = "Column-view hierarchical plot"}
+if (requireNamespace("ggraph", quietly = TRUE)) {
+  moneca::plot_moneca_hierarchical(
+    out$cols,
+    title = "moneca_bipartite - column view"
+  )
+}
+```
+
+The joint row-block by column-block view is not a moneca-class object
+and is plotted directly from the diagnostics slot:
+
+```{r joint-heatmap, fig.alt = "Joint block-interaction heatmap"}
+image(
+  t(bim[[1]])[, nrow(bim[[1]]):1],
+  axes = FALSE,
+  main = "Joint block interaction (finest level)",
+  xlab = "column block",
+  ylab = "row block"
+)
+```
+
+## 6. Latent-block recovery experiment
+
+A block-constant generator with known row and column memberships lets
+us measure how well DcLbm recovers the planted structure. We compare
+the row-side and column-side memberships at the level closest to the
+planted sizes against `row_block` and `col_block` with the adjusted
+Rand index. The fixture is independent of the quick-start block to
+keep this section self-contained.
+
+```{r parity-setup}
+# 1. planted design -----
+set.seed(42)
+n_row <- 80
+n_col <- 60
+K_row_true <- 4
+K_col_true <- 3
+row_block_true <- rep(seq_len(K_row_true), length.out = n_row)
+col_block_true <- rep(seq_len(K_col_true), length.out = n_col)
+
+# 2. block-constant Poisson with strong diagonal signal -----
+omega <- matrix(0.8, K_row_true, K_col_true)
+for (g in seq_len(K_row_true)) {
+  h <- ((g - 1) %% K_col_true) + 1L
+  omega[g, h] <- 8
+}
+lambda <- omega[row_block_true, col_block_true]
+mx_parity <- matrix(
+  stats::rpois(n_row * n_col, lambda = lambda),
+  n_row,
+  n_col
+)
+rownames(mx_parity) <- paste0("R", seq_len(n_row))
+colnames(mx_parity) <- paste0("C", seq_len(n_col))
+
+# 3. fit -----
+fit_parity <- monecascale::moneca_bipartite(
+  mx_parity,
+  seed = 42,
+  verbose = FALSE
+)
+```
+
+```{r parity-helpers}
+# Minimal ARI. Returns 1 when labelings agree up to permutation.
+ari <- function(a, b) {
+  tab <- table(a, b)
+  n <- sum(tab)
+  sc <- function(x) sum(choose(x, 2))
+  a_sum <- sc(rowSums(tab))
+  b_sum <- sc(colSums(tab))
+  tab_sum <- sc(as.vector(tab))
+  expected <- a_sum * b_sum / choose(n, 2)
+  max_idx <- (a_sum + b_sum) / 2
+  if (max_idx == expected) return(1)
+  (tab_sum - expected) / (max_idx - expected)
+}
+
+level_labels <- function(mon, level) {
+  n_core <- nrow(mon$mat.list[[1]]) - 1L
+  labels <- rep(NA_integer_, n_core)
+  cliques <- mon$segment.list[[level]]
+  for (b in seq_along(cliques)) labels[cliques[[b]]] <- b
+  na_idx <- is.na(labels)
+  if (any(na_idx)) {
+    labels[na_idx] <- max(0L, labels, na.rm = TRUE) + seq_len(sum(na_idx))
+  }
+  as.integer(labels)
+}
+```
+
+```{r parity-score}
+# 1. pick the level whose row-block count matches the planted K_row -----
+krow_per_level <- fit_parity$bipartite_diagnostics$n_blocks_row_per_level
+kcol_per_level <- fit_parity$bipartite_diagnostics$n_blocks_col_per_level
+row_level <- which.min(abs(krow_per_level - K_row_true)) + 1L
+col_level <- which.min(abs(kcol_per_level - K_col_true)) + 1L
+
+# 2. extract moneca-style node labels at those levels -----
+row_hat <- level_labels(fit_parity$rows, row_level)
+col_hat <- level_labels(fit_parity$cols, col_level)
+
+# 3. score against planted memberships -----
+ari_row <- ari(row_block_true, row_hat)
+ari_col <- ari(col_block_true, col_hat)
+data.frame(
+  side = c("rows", "cols"),
+  K_true = c(K_row_true, K_col_true),
+  K_hat = c(krow_per_level[row_level - 1L], kcol_per_level[col_level - 1L]),
+  ARI = round(c(ari_row, ari_col), 3)
+)
+```
+
+On this fixture DcLbm typically recovers both sides with ARI > 0.5,
+and often well above. Exact values vary with the seed and with the
+signal-to-noise contrast between diagonal and off-diagonal block
+intensities. The load-bearing claim is directional: the rectangular
+RR = DcLbm residual bridge is empirically supported on data where the
+planted structure is known.
+
+## 7. Limitations and future directions
+
+- **One-mode projections, not joint clustering.** Exposing the fit to
+  moneca requires two square objects, so the joint `Krow x Kcol`
+  co-clustering is not representable inside `$rows` or `$cols`. The
+  full block-interaction matrices are retained in
+  `$bipartite_diagnostics$block_interaction_matrix_per_level` for
+  consumers that need the joint view.
+- **No isolates summary on the bipartite side yet.** Row- and
+  column-side isolates surfaces are deferred to release 0.2.1.
+- **Single backend.** `moneca_bipartite()` currently exposes the
+  `greed` DcLbm backend only. A `graph-tool` bipartite backend via
+  `pclabel` is reserved for input sizes beyond ~10^5 per side.
+- **Auto-level composition pending.** Until direction **D6**
+  (`auto_segment_levels()`) lands, cap the hierarchy explicitly via
+  `segment.levels` when downstream consumers expect a fixed depth.
+- **Square input is rejected.** For square mobility matrices use
+  `monecascale::moneca_sbm()` or `moneca::moneca_fast()`.
+
+## 8. References
+
+- Come, E., Jouvin, N., Latouche, P., Bouveyron, C., Bataillon, E., &
+  Chen, A. (2021). Hierarchical clustering with discrete latent
+  variable models and the integrated classification likelihood.
+  *Advances in Data Analysis and Classification*, 15, 957-986.
+- Larremore, D. B., Clauset, A., & Jacobs, A. Z. (2014). Efficiently
+  inferring community structure in bipartite networks. *Physical
+  Review E*, 90(1), 012805.
+- Karrer, B., & Newman, M. E. J. (2011). Stochastic blockmodels and
+  community structure in networks. *Physical Review E*, 83, 016107.
+- Peixoto, T. P. (2014). Hierarchical block structures and
+  high-resolution model selection in large networks. *Physical Review
+  X*, 4, 011047.
+
+```{r no-greed-note, echo = FALSE, eval = !greed_available}
+cat(
+  "Note: The `greed` package was not available when this vignette was\n",
+  "built. The code chunks above were not evaluated. Install `greed`\n",
+  "with install.packages('greed') to reproduce the examples.\n",
+  sep = ""
+)
+```
