@@ -19,8 +19,7 @@ Authors@R: c(
     )
 URL: https://github.com/gmontaletti/monecascale
 BugReports: https://github.com/gmontaletti/monecascale/issues
-Remotes:
-    github::gmontaletti/MONECA
+Remotes: github::gmontaletti/MONECA
 Depends:
   R (>= 3.5.0)
 Imports:

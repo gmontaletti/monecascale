@@ -30,15 +30,9 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Install moneca from GitHub (required Imports)
-        run: |
-          install.packages("remotes")
-          remotes::install_github("gmontaletti/MONECA")
-        shell: Rscript {0}
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          extra-packages: any::pkgdown, github::gmontaletti/MONECA, local::.
           needs: website
 
       - name: Build site
