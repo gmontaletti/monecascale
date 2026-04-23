@@ -29,3 +29,16 @@ consumable by moneca’s segment.*() and plot_moneca\_*() stack.
   : Summary of a \`moneca_bipartite\` object
 - [`print(`*`<summary.moneca_bipartite>`*`)`](https://gmontaletti.github.io/monecascale/reference/print.summary.moneca_bipartite.md)
   : Print a \`summary.moneca_bipartite\` object
+
+## Auto-level Selection
+
+Post-hoc selection of a hierarchy level from a moneca_sbm or
+moneca_bipartite fit via MDL elbow or level-to-level MI plateau.
+Composes with the segment.levels = “auto” wrapper on both backends.
+
+- [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  : Auto-select a Hierarchy Level for a \`moneca\` Fit
+- [`print(`*`<auto_segment_levels>`*`)`](https://gmontaletti.github.io/monecascale/reference/print.auto_segment_levels.md)
+  : Print an \`auto_segment_levels\` Result
+- [`format(`*`<auto_segment_levels>`*`)`](https://gmontaletti.github.io/monecascale/reference/format.auto_segment_levels.md)
+  : Format an \`auto_segment_levels\` Result

@@ -11,13 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/gmontaletti/monecascale/blob/main/DESCRIPTION)
 
 Montaletti G (2026). *monecascale: Scalable Backends for MONECA Mobility
-Clustering*. R package version 0.2.0,
+Clustering*. R package version 0.3.0,
 <https://github.com/gmontaletti/monecascale>.
 
     @Manual{,
       title = {monecascale: Scalable Backends for MONECA Mobility Clustering},
       author = {Giampaolo Montaletti},
       year = {2026},
-      note = {R package version 0.2.0},
+      note = {R package version 0.3.0},
       url = {https://github.com/gmontaletti/monecascale},
     }

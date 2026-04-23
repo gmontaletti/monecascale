@@ -1,5 +1,52 @@
 # Changelog
 
+## monecascale 0.3.0
+
+### New features
+
+- [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  — D6 of the scaling roadmap. Post-hoc auto-selection of a hierarchy
+  level from a fit, using either:
+  - `method = "mdl"` — MDL elbow via the kneedle algorithm (Satopää et
+    al. 2011) or `max_second_diff` fallback.
+  - `method = "mi_plateau"` — level-to-level mutual information plateau,
+    picking the level where marginal gain drops below `plateau_tol` of
+    the max MI.
+- `segment.levels = "auto"` wrapper on
+  [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+  and
+  [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
+  — fits the full hierarchy, calls
+  [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  post-hoc, trims `segment.list` and `mat.list` to the chosen level, and
+  attaches `$auto_level` with diagnostics.
+- New `auto_method` argument on both backends, defaulting to `"mdl"`.
+- Returns an S3 `auto_segment_levels` object with `$level`, `$method`,
+  `$diagnostics` (per-level `mdl`, `mi_to_next`, `n_blocks`, `score`),
+  `$backend`, and `$call`. Includes `print` and `format` methods.
+
+### Internals
+
+- `R/bipartite_utils.R::.build_side_moneca()` now stamps each bipartite
+  side with `$bipartite_origin` and a slim
+  `$bipartite_diagnostics_side`, so detached sides can feed
+  [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  without the parent object.
+
+### Coverage
+
+- SBM and bipartite backends fully supported.
+  [`moneca_fast()`](https://gmontaletti.github.io/MONECA/reference/moneca_fast.html)
+  output raises an explicit error pointing at the 0.3.1 roadmap —
+  ex-post MDL reconstruction or an upstream bookkeeping PR to moneca is
+  the open choice.
+
+### Dependencies
+
+- No new Imports or Suggests.
+
+------------------------------------------------------------------------
+
 ## monecascale 0.2.0
 
 ### New features

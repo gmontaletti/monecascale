@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,36 @@
       <small>Source: <a href="https://github.com/gmontaletti/monecascale/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="monecascale-030">monecascale 0.3.0<a class="anchor" aria-label="anchor" href="#monecascale-030"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-0"></a></h3>
+<ul><li>
+<code><a href="../reference/auto_segment_levels.html">auto_segment_levels()</a></code> — D6 of the scaling roadmap. Post-hoc auto-selection of a hierarchy level from a fit, using either:
+<ul><li>
+<code>method = "mdl"</code> — MDL elbow via the kneedle algorithm (Satopää et al. 2011) or <code>max_second_diff</code> fallback.</li>
+<li>
+<code>method = "mi_plateau"</code> — level-to-level mutual information plateau, picking the level where marginal gain drops below <code>plateau_tol</code> of the max MI.</li>
+</ul></li>
+<li>
+<code>segment.levels = "auto"</code> wrapper on <code><a href="../reference/moneca_sbm.html">moneca_sbm()</a></code> and <code><a href="../reference/moneca_bipartite.html">moneca_bipartite()</a></code> — fits the full hierarchy, calls <code><a href="../reference/auto_segment_levels.html">auto_segment_levels()</a></code> post-hoc, trims <code>segment.list</code> and <code>mat.list</code> to the chosen level, and attaches <code>$auto_level</code> with diagnostics.</li>
+<li>New <code>auto_method</code> argument on both backends, defaulting to <code>"mdl"</code>.</li>
+<li>Returns an S3 <code>auto_segment_levels</code> object with <code>$level</code>, <code>$method</code>, <code>$diagnostics</code> (per-level <code>mdl</code>, <code>mi_to_next</code>, <code>n_blocks</code>, <code>score</code>), <code>$backend</code>, and <code>$call</code>. Includes <code>print</code> and <code>format</code> methods.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internals-0-3-0">Internals<a class="anchor" aria-label="anchor" href="#internals-0-3-0"></a></h3>
+<ul><li>
+<code>R/bipartite_utils.R::.build_side_moneca()</code> now stamps each bipartite side with <code>$bipartite_origin</code> and a slim <code>$bipartite_diagnostics_side</code>, so detached sides can feed <code><a href="../reference/auto_segment_levels.html">auto_segment_levels()</a></code> without the parent object.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="coverage-0-3-0">Coverage<a class="anchor" aria-label="anchor" href="#coverage-0-3-0"></a></h3>
+<ul><li>SBM and bipartite backends fully supported. <code><a href="https://gmontaletti.github.io/MONECA/reference/moneca_fast.html" class="external-link">moneca_fast()</a></code> output raises an explicit error pointing at the 0.3.1 roadmap — ex-post MDL reconstruction or an upstream bookkeeping PR to moneca is the open choice.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependencies-0-3-0">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-0-3-0"></a></h3>
+<ul><li>No new Imports or Suggests.</li>
+</ul><hr></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="monecascale-020">monecascale 0.2.0<a class="anchor" aria-label="anchor" href="#monecascale-020"></a></h2>
 <div class="section level3">

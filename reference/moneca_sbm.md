@@ -19,6 +19,7 @@ moneca_sbm(
   small.cell.reduction = 0,
   symmetric_method = c("sum", "min", "none"),
   segment.levels = NULL,
+  auto_method = c("mdl", "mi_plateau"),
   max_K = NULL,
   isolates = FALSE,
   has_margins = "auto",
@@ -68,10 +69,20 @@ moneca_sbm(
 
 - segment.levels:
 
-  Integer or `NULL`. If `NULL` (default), all hierarchy levels produced
-  by the backend (from K_final down to 2) are returned. If an integer,
-  the hierarchy is truncated to that many approximately log-spaced
-  levels.
+  Integer, `NULL`, or the string `"auto"`. If `NULL` (default), all
+  hierarchy levels produced by the backend (from K_final down to 2) are
+  returned. If an integer, the hierarchy is truncated to that many
+  approximately log-spaced levels. If `"auto"`, the full hierarchy is
+  fit and then
+  [`auto_segment_levels`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  picks a single preferred level via `auto_method`; the object is
+  trimmed to that level and carries the picker result under
+  `$auto_level`.
+
+- auto_method:
+
+  One of `"mdl"` (default) or `"mi_plateau"`. Ignored unless
+  `segment.levels = "auto"`.
 
 - max_K:
 

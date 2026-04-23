@@ -19,7 +19,7 @@ that underpins `moneca_sbm()`."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,7 @@ that underpins `moneca_sbm()`.</p>
 <span>  small.cell.reduction <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  margin_policy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"row_col"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  segment.levels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  auto_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mdl"</span>, <span class="st">"mi_plateau"</span><span class="op">)</span>,</span>
 <span>  max_K <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_init <span class="op">=</span> <span class="fl">1L</span>,</span>
@@ -124,10 +125,20 @@ for downstream moneca compatibility.</p></dd>
 
 
 <dt id="arg-segment-levels">segment.levels<a class="anchor" aria-label="anchor" href="#arg-segment-levels"></a></dt>
-<dd><p>Integer or `NULL`. If `NULL` (default), all
-hierarchy levels produced by the backend (from the finest joint `K`
-down to `2`) are returned. If an integer, the hierarchy is truncated
-to that many approximately log-spaced levels.</p></dd>
+<dd><p>Integer, `NULL`, or the string `"auto"`. If `NULL`
+(default), all hierarchy levels produced by the backend (from the
+finest joint `K` down to `2`) are returned. If an integer, the
+hierarchy is truncated to that many approximately log-spaced levels.
+If `"auto"`, the full hierarchy is fit and then
+[auto_segment_levels()] picks a preferred level **independently per
+side**; `$rows` and `$cols` are trimmed accordingly and each carries
+the picker result under `$auto_level`. The two sides may end up at
+different levels.</p></dd>
+
+
+<dt id="arg-auto-method">auto_method<a class="anchor" aria-label="anchor" href="#arg-auto-method"></a></dt>
+<dd><p>One of `"mdl"` (default) or `"mi_plateau"`. Ignored
+unless `segment.levels = "auto"`.</p></dd>
 
 
 <dt id="arg-max-k">max_K<a class="anchor" aria-label="anchor" href="#arg-max-k"></a></dt>

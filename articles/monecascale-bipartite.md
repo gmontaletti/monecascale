@@ -1188,8 +1188,9 @@ structure is known.
   bipartite backend via `pclabel` is reserved for input sizes beyond
   ~10^5 per side.
 - **Auto-level composition pending.** Until direction **D6**
-  (`auto_segment_levels()`) lands, cap the hierarchy explicitly via
-  `segment.levels` when downstream consumers expect a fixed depth.
+  ([`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md))
+  lands, cap the hierarchy explicitly via `segment.levels` when
+  downstream consumers expect a fixed depth.
 - **Square input is rejected.** For square mobility matrices use
   [`monecascale::moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
   or

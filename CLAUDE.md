@@ -40,6 +40,13 @@ moneca’s analysis and plotting stack consumes the output unchanged.
   [`greed::DcLbm`](https://comeetie.github.io/greed/reference/DcLbm.html)
   on rectangular RR. Returns `moneca_bipartite` wrapping two
   moneca-class views (`$rows`, `$cols`). Shipped in 0.2.0.
+- [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  — post-hoc hierarchy-level selection via MDL elbow or mutual
+  information plateau; also available as `segment.levels = "auto"` on
+  [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+  and
+  [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md).
+  Shipped in 0.3.0.
 
 ## Planned directions (scaling roadmap)
 
@@ -50,13 +57,14 @@ Landed here unless otherwise noted. See
 - ~~**D1**
   [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)~~
   — **SHIPPED 0.2.0**.
+- ~~**D6**
+  [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)~~
+  — **SHIPPED 0.3.0** for SBM and bipartite. moneca_fast() support
+  pending 0.3.1.
 - **D3** `moneca_flow()` — Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation,
   local Personalized PageRank expansion.
 - **D5** `moneca_nmf()` — Poisson NMF.
-- **D6** `auto_segment_levels()` — auto-stopping criteria (MDL,
-  stability, plateau). Composes with moneca’s `moneca_fast()` too — may
-  partly live in moneca.
 - **D7** `moneca_duckdb()` / `moneca_arrow()` — out-of-core / streaming
   backend.
 
@@ -103,12 +111,20 @@ covr::package_coverage()
 - `R/bipartite_utils.R` — rectangular RR, one-mode projection, adapter.
 - `R/bipartite_methods.R` — `print` / `summary` / `format` for
   `moneca_bipartite`.
+- `R/auto_segment_levels.R` — public
+  [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  entry + dispatcher + trim helper.
+- `R/auto_level_criteria.R` — MDL (kneedle / max_second_diff) and
+  MI-plateau criteria.
+- `R/auto_level_methods.R` — `print` / `format` for
+  `auto_segment_levels`.
 - `tests/testthat/helper-test-data.R` — shared generators wrapping
   [`moneca::generate_mobility_data()`](https://gmontaletti.github.io/MONECA/reference/generate_mobility_data.html).
 - `vignettes/monecascale-sbm.Rmd` — RR ≡ DC-SBM bridge walkthrough and
   parity experiment.
 - `vignettes/monecascale-bipartite.Rmd` — bipartite walkthrough +
   recovery experiment.
+- `vignettes/monecascale-auto-level.Rmd` — auto-level walkthrough.
 
 ## Coding conventions
 

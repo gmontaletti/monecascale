@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,8 @@
 <code><a href="reference/moneca_sbm_install_graphtool.html">moneca_sbm_install_graphtool()</a></code> — conda-forge install helper for the graphtool backend.</li>
 <li>
 <code><a href="reference/moneca_bipartite.html">moneca_bipartite()</a></code> — hierarchical bipartite co-clustering via <code><a href="https://comeetie.github.io/greed/reference/DcLbm.html" class="external-link">greed::DcLbm</a></code> on rectangular RR. Returns <code>moneca_bipartite</code> wrapping two moneca-class views (<code>$rows</code>, <code>$cols</code>). Shipped in 0.2.0.</li>
+<li>
+<code><a href="reference/auto_segment_levels.html">auto_segment_levels()</a></code> — post-hoc hierarchy-level selection via MDL elbow or mutual information plateau; also available as <code>segment.levels = "auto"</code> on <code><a href="reference/moneca_sbm.html">moneca_sbm()</a></code> and <code><a href="reference/moneca_bipartite.html">moneca_bipartite()</a></code>. Shipped in 0.3.0.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="planned-directions-scaling-roadmap">Planned directions (scaling roadmap)<a class="anchor" aria-label="anchor" href="#planned-directions-scaling-roadmap"></a></h2>
@@ -74,13 +76,13 @@
 <ul><li>
 <del><strong>D1</strong> <code><a href="reference/moneca_bipartite.html">moneca_bipartite()</a></code></del> — <strong>SHIPPED 0.2.0</strong>.</li>
 <li>
+<del><strong>D6</strong> <code><a href="reference/auto_segment_levels.html">auto_segment_levels()</a></code></del> — <strong>SHIPPED 0.3.0</strong> for SBM and bipartite. moneca_fast() support pending 0.3.1.</li>
+<li>
 <strong>D3</strong> <code>moneca_flow()</code> — Infomap / Map Equation.</li>
 <li>
 <strong>D4</strong> <code>moneca_localclique()</code> — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.</li>
 <li>
 <strong>D5</strong> <code>moneca_nmf()</code> — Poisson NMF.</li>
-<li>
-<strong>D6</strong> <code>auto_segment_levels()</code> — auto-stopping criteria (MDL, stability, plateau). Composes with moneca’s <code>moneca_fast()</code> too — may partly live in moneca.</li>
 <li>
 <strong>D7</strong> <code>moneca_duckdb()</code> / <code>moneca_arrow()</code> — out-of-core / streaming backend.</li>
 </ul></div>
@@ -128,11 +130,19 @@
 <li>
 <code>R/bipartite_methods.R</code> — <code>print</code> / <code>summary</code> / <code>format</code> for <code>moneca_bipartite</code>.</li>
 <li>
+<code>R/auto_segment_levels.R</code> — public <code><a href="reference/auto_segment_levels.html">auto_segment_levels()</a></code> entry + dispatcher + trim helper.</li>
+<li>
+<code>R/auto_level_criteria.R</code> — MDL (kneedle / max_second_diff) and MI-plateau criteria.</li>
+<li>
+<code>R/auto_level_methods.R</code> — <code>print</code> / <code>format</code> for <code>auto_segment_levels</code>.</li>
+<li>
 <code>tests/testthat/helper-test-data.R</code> — shared generators wrapping <code><a href="https://gmontaletti.github.io/MONECA/reference/generate_mobility_data.html" class="external-link">moneca::generate_mobility_data()</a></code>.</li>
 <li>
 <code>vignettes/monecascale-sbm.Rmd</code> — RR ≡ DC-SBM bridge walkthrough and parity experiment.</li>
 <li>
 <code>vignettes/monecascale-bipartite.Rmd</code> — bipartite walkthrough + recovery experiment.</li>
+<li>
+<code>vignettes/monecascale-auto-level.Rmd</code> — auto-level walkthrough.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="coding-conventions">Coding conventions<a class="anchor" aria-label="anchor" href="#coding-conventions"></a></h2>

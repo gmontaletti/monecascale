@@ -17,7 +17,7 @@ step."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,7 @@ step.</p>
 <span>  small.cell.reduction <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  symmetric_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sum"</span>, <span class="st">"min"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  segment.levels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  auto_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mdl"</span>, <span class="st">"mi_plateau"</span><span class="op">)</span>,</span>
 <span>  max_K <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  isolates <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  has_margins <span class="op">=</span> <span class="st">"auto"</span>,</span>
@@ -118,10 +119,19 @@ or <code>"none"</code> (keep directed). Applied to the core before SBM.</p></dd>
 
 
 <dt id="arg-segment-levels">segment.levels<a class="anchor" aria-label="anchor" href="#arg-segment-levels"></a></dt>
-<dd><p>Integer or <code>NULL</code>. If <code>NULL</code> (default),
-all hierarchy levels produced by the backend (from K_final down to 2)
-are returned. If an integer, the hierarchy is truncated to that many
-approximately log-spaced levels.</p></dd>
+<dd><p>Integer, <code>NULL</code>, or the string <code>"auto"</code>.
+If <code>NULL</code> (default), all hierarchy levels produced by the backend
+(from K_final down to 2) are returned. If an integer, the hierarchy is
+truncated to that many approximately log-spaced levels. If
+<code>"auto"</code>, the full hierarchy is fit and then
+<code><a href="auto_segment_levels.html">auto_segment_levels</a></code> picks a single preferred level via
+<code>auto_method</code>; the object is trimmed to that level and carries
+the picker result under <code>$auto_level</code>.</p></dd>
+
+
+<dt id="arg-auto-method">auto_method<a class="anchor" aria-label="anchor" href="#arg-auto-method"></a></dt>
+<dd><p>One of <code>"mdl"</code> (default) or <code>"mi_plateau"</code>.
+Ignored unless <code>segment.levels = "auto"</code>.</p></dd>
 
 
 <dt id="arg-max-k">max_K<a class="anchor" aria-label="anchor" href="#arg-max-k"></a></dt>
