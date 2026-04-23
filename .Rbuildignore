@@ -11,3 +11,6 @@
 ^\.gitignore$
 ^renv$
 ^renv\.lock$
+^\.Rprofile$
+^CLAUDE\.md$
+^\.claude$
