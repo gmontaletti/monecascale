@@ -91,7 +91,7 @@ See `vignette("monecascale-sbm")` for the RR ≡ DC-SBM residual walkthrough, th
 
 ```
 Montaletti, G. (2026). monecascale: Scalable Backends for MONECA.
-R package version 0.4.0. https://github.com/gmontaletti/monecascale
+R package version 0.4.1. https://github.com/gmontaletti/monecascale
 
 Montaletti, G. (2026). moneca: Mobility Network Clustering Analysis.
 R package version 1.8.0. https://github.com/gmontaletti/MONECA

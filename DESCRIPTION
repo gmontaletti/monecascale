@@ -16,7 +16,7 @@ Description: Provides scalable clustering backends for the moneca package,
     moneca_bipartite() extends this to the degree-corrected Latent Block
     Model (DcLbm) on scaled-rounded RR. Flow-based clustering offers an
     orthogonal perspective on hierarchical community detection.
-Version: 0.4.0
+Version: 0.4.1
 Author: Giampaolo Montaletti <giampaolo.montaletti@gmail.com>
 Maintainer: Giampaolo Montaletti <giampaolo.montaletti@gmail.com>
 Authors@R: c(

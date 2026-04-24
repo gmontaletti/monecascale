@@ -1,3 +1,17 @@
+# monecascale 0.4.1
+
+## Bug fixes / completeness
+
+- `auto_segment_levels()` now supports `moneca::moneca_fast()` output
+  with both criteria. The `method = "mdl"` branch scores each
+  hierarchical level via weighted modularity on the core graph
+  (`igraph::modularity()`); the score column in `$diagnostics` is
+  named `"modularity"` to reflect the scoring function honestly.
+  `method = "mi_plateau"` works unchanged. This closes the deferred
+  feature tracked as "0.3.1" in the 0.3.0 release notes.
+
+---
+
 # monecascale 0.4.0
 
 ## New features

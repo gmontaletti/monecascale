@@ -32,6 +32,15 @@
       n_blocks = obj$bipartite_diagnostics_side$n_blocks_per_level,
       score_col = "mdl"
     ),
+    fast = {
+      scored <- .fast_compute_modularity(obj)
+      list(
+        mdl = -scored$modularity,
+        n_blocks = scored$n_blocks,
+        score_col = "modularity",
+        raw_score = scored$modularity
+      )
+    },
     stop(
       "Unsupported backend for .criterion_mdl(): ",
       backend,
@@ -119,7 +128,7 @@
   )
   # Insert the backend-specific score column ("mdl" or "codelength")
   # between n_blocks and mi_to_next so the layout is stable.
-  diag_df[[score_col]] <- mdl
+  diag_df[[score_col]] <- if (!is.null(src$raw_score)) src$raw_score else mdl
   diag_df <- diag_df[, c(
     "level",
     "n_blocks",
@@ -283,4 +292,61 @@
   nz <- p_ab > 0
   outer_ab <- outer(p_a, p_b)
   sum(p_ab[nz] * log2(p_ab[nz] / outer_ab[nz]))
+}
+
+# 13. Modularity trace for moneca_fast() output -----------------------------
+
+#' @keywords internal
+#' @noRd
+.fast_compute_modularity <- function(obj) {
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    stop(
+      "auto_segment_levels(method = 'mdl') on moneca_fast() output ",
+      "requires the 'igraph' package.",
+      call. = FALSE
+    )
+  }
+
+  seg_list <- obj$segment.list
+  L <- length(seg_list)
+  n_core <- length(seg_list[[1]])
+
+  mx_full <- obj$mat.list[[1]]
+  # strip margins if they were appended (mat is (n_core + 1) square)
+  core_mx <- if (isTRUE(obj$margins_added) && nrow(mx_full) == n_core + 1L) {
+    mx_full[seq_len(n_core), seq_len(n_core), drop = FALSE]
+  } else {
+    mx_full[seq_len(n_core), seq_len(n_core), drop = FALSE]
+  }
+
+  # igraph likes a dense matrix here; at classification scale this is fine
+  core_dense <- as.matrix(core_mx)
+
+  g <- igraph::graph_from_adjacency_matrix(
+    core_dense,
+    mode = "directed",
+    weighted = TRUE,
+    diag = FALSE
+  )
+  w <- igraph::E(g)$weight
+
+  # Level 1 is atomic (each node its own block) — modularity is 0 and
+  # contributes no elbow information. Skip it; diagnostics align to
+  # segment.list levels 2..L.
+  if (L < 2L) {
+    return(list(modularity = numeric(0), n_blocks = integer(0)))
+  }
+
+  mods <- numeric(L - 1L)
+  nbs <- integer(L - 1L)
+  for (l in seq(2L, L)) {
+    memb <- .cliques_to_membership(seg_list[[l]], n_core)
+    mods[l - 1L] <- tryCatch(
+      igraph::modularity(g, membership = memb, weights = w),
+      error = function(e) NA_real_
+    )
+    nbs[l - 1L] <- length(unique(memb))
+  }
+
+  list(modularity = mods, n_blocks = nbs)
 }

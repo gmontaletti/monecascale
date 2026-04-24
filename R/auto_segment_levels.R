@@ -132,14 +132,6 @@ auto_segment_levels <- function(
 
   # 3. Backend detection ---------------------------------------------------
   backend <- .detect_backend(obj)
-  if (backend == "fast") {
-    stop(
-      "auto_segment_levels() does not yet support moneca_fast() output. ",
-      "Planned for monecascale 0.3.1. Use moneca_sbm() or ",
-      "moneca_bipartite() for now.",
-      call. = FALSE
-    )
-  }
 
   # 4. Criterion dispatch ---------------------------------------------------
   result <- switch(

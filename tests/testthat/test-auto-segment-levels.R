@@ -22,7 +22,8 @@ test_that("auto_segment_levels() rejects non-moneca input", {
 
 # 3. Backend detection on a fast-like object ---------------------------------
 
-test_that("auto_segment_levels() errors on moneca_fast-like objects", {
+test_that("auto_segment_levels() handles a trivial fast-like object", {
+  skip_if_not_installed("igraph")
   fake_fast_like <- list(
     segment.list = list(as.list(1:5)),
     mat.list = list(matrix(0, 6, 6)),
@@ -32,10 +33,10 @@ test_that("auto_segment_levels() errors on moneca_fast-like objects", {
     symmetric_method = "sum"
   )
   class(fake_fast_like) <- "moneca"
-  expect_error(
-    auto_segment_levels(fake_fast_like),
-    regexp = "moneca_fast"
-  )
+  res <- auto_segment_levels(fake_fast_like, method = "mdl")
+  expect_s3_class(res, "auto_segment_levels")
+  expect_equal(res$backend, "fast")
+  expect_equal(res$level, 1L)
 })
 
 # 4. MDL criterion on SBM fit -------------------------------------------------
@@ -166,4 +167,38 @@ test_that("auto_segment_levels works on flow backend", {
   expect_equal(res$backend, "flow")
   expect_true("codelength" %in% colnames(res$diagnostics))
   expect_true(res$level >= 1L && res$level <= length(fit$segment.list))
+})
+
+# 12. moneca_fast() backend --------------------------------------------------
+
+test_that("auto_segment_levels supports moneca_fast() with both criteria", {
+  skip_if_not_installed("moneca")
+  skip_if_not_installed("igraph")
+
+  set.seed(2026)
+  mx <- get_custom_test_data(n_classes = 12, seed = 2026)
+  fit <- moneca::moneca_fast(mx, segment.levels = 4)
+
+  res_mdl <- auto_segment_levels(fit, method = "mdl")
+  expect_s3_class(res_mdl, "auto_segment_levels")
+  expect_equal(res_mdl$backend, "fast")
+  expect_true("modularity" %in% colnames(res_mdl$diagnostics))
+  expect_true(res_mdl$level >= 1L)
+
+  res_mi <- auto_segment_levels(fit, method = "mi_plateau")
+  expect_equal(res_mi$backend, "fast")
+  expect_true(res_mi$level >= 1L)
+})
+
+test_that("fast error gate is gone", {
+  skip_if_not_installed("moneca")
+  skip_if_not_installed("igraph")
+
+  set.seed(2026)
+  mx <- get_custom_test_data(n_classes = 8, seed = 2026)
+  fit <- moneca::moneca_fast(mx, segment.levels = 3)
+  expect_error(
+    auto_segment_levels(fit, method = "mdl"),
+    regexp = NA
+  )
 })

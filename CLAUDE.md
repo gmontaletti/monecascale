@@ -36,7 +36,7 @@ Every exported entry point returns a `moneca`-class S3 object, so moneca's analy
 Landed here unless otherwise noted. See `~/.claude/plans/monecascale-scaling-roadmap.md` and `~/.claude/projects/.../memory/scaling_directions.md`.
 
 - ~~**D1** `moneca_bipartite()`~~ — **SHIPPED 0.2.0**.
-- ~~**D6** `auto_segment_levels()`~~ — **SHIPPED 0.3.0** for SBM and bipartite. moneca_fast() support pending 0.3.1.
+- ~~**D6** `auto_segment_levels()`~~ — **SHIPPED 0.3.0** for SBM and bipartite. Fast-backend support added in 0.4.1.
 - ~~**D3** `moneca_flow()`~~ — **SHIPPED 0.4.0** Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.
 - **D5** `moneca_nmf()` — Poisson NMF.
