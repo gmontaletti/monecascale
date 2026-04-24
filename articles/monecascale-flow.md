@@ -380,13 +380,13 @@ fit_sbm <- monecascale::moneca_sbm(
 )
 
 # 3. level-2 memberships from each (as vectors) -----
-mem_flow <- moneca::segment.membership(fit_flow, level = 2)[[1]]
-mem_sbm  <- moneca::segment.membership(fit_sbm,  level = 2)[[1]]
+mem_flow <- moneca::segment.membership(fit_flow, level = 2)$membership
+mem_sbm  <- moneca::segment.membership(fit_sbm,  level = 2)$membership
 
 length(unique(mem_flow))
-#> [1] 21
+#> [1] 3
 length(unique(mem_sbm))
-#> [1] 21
+#> [1] 3
 ```
 
 If `mclust` is available we can quantify agreement with the adjusted
@@ -409,7 +409,7 @@ nmi <- {
 }
 c(ARI = ari, NMI = nmi)
 #> ARI NMI 
-#> NaN   1
+#>   1   1
 ```
 
 On block-Poisson fixtures with clean planted structure the two backends

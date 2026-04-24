@@ -437,13 +437,13 @@ two recursion / hierarchy levels.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 3. level-2 memberships from each (as vectors) -----</span></span>
-<span><span class="va">mem_flow</span> <span class="op">&lt;-</span> <span class="fu">moneca</span><span class="fu">::</span><span class="fu"><a href="https://gmontaletti.github.io/MONECA/reference/segment.membership.html" class="external-link">segment.membership</a></span><span class="op">(</span><span class="va">fit_flow</span>, level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="va">mem_sbm</span>  <span class="op">&lt;-</span> <span class="fu">moneca</span><span class="fu">::</span><span class="fu"><a href="https://gmontaletti.github.io/MONECA/reference/segment.membership.html" class="external-link">segment.membership</a></span><span class="op">(</span><span class="va">fit_sbm</span>,  level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">mem_flow</span> <span class="op">&lt;-</span> <span class="fu">moneca</span><span class="fu">::</span><span class="fu"><a href="https://gmontaletti.github.io/MONECA/reference/segment.membership.html" class="external-link">segment.membership</a></span><span class="op">(</span><span class="va">fit_flow</span>, level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">membership</span></span>
+<span><span class="va">mem_sbm</span>  <span class="op">&lt;-</span> <span class="fu">moneca</span><span class="fu">::</span><span class="fu"><a href="https://gmontaletti.github.io/MONECA/reference/segment.membership.html" class="external-link">segment.membership</a></span><span class="op">(</span><span class="va">fit_sbm</span>,  level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">membership</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">mem_flow</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 21</span></span>
+<span><span class="co">#&gt; [1] 3</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">mem_sbm</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 21</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
 <p>If <code>mclust</code> is available we can quantify agreement with
 the adjusted Rand index and normalised mutual information.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -463,7 +463,7 @@ the adjusted Rand index and normalised mutual information.</p>
 <span><span class="op">}</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>ARI <span class="op">=</span> <span class="va">ari</span>, NMI <span class="op">=</span> <span class="va">nmi</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ARI NMI </span></span>
-<span><span class="co">#&gt; NaN   1</span></span></code></pre></div>
+<span><span class="co">#&gt;   1   1</span></span></code></pre></div>
 <p>On block-Poisson fixtures with clean planted structure the two
 backends converge: flow and SBM recover the same partition because both
 the stationary flow and the stochastic-equivalence signal point at the
