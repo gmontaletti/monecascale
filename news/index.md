@@ -1,5 +1,98 @@
 # Changelog
 
+## monecascale 0.5.0
+
+### New features
+
+- [`rr_from_duckdb()`](https://gmontaletti.github.io/monecascale/reference/rr_from_duckdb.md)
+  — build a sparse relative-risk matrix out of core via DuckDB SQL.
+  Accepts edge-list input as a data.frame, a file path (`.csv` /
+  `.parquet`), or a table name on a pre-connected DuckDB instance.
+  Returns a `"monecascale_rr"` list with sparse `$rr`, sparse `$counts`,
+  and margin / node-name metadata. Composes with
+  [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
+  (via `$rr`) and
+  [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+  /
+  [`moneca_flow()`](https://gmontaletti.github.io/monecascale/reference/moneca_flow.md)
+  (via `$counts`).
+
+### Dependencies
+
+- `duckdb (>= 1.0.0)` and `DBI (>= 1.2.0)` added to `Suggests`. The
+  package degrades gracefully with an informative error when either is
+  missing.
+
+### Documentation
+
+- New vignette `monecascale-duckdb` covering the RR bottleneck, the SQL
+  recipe, three input modes, and end-to-end composition with the
+  existing clustering backends.
+
+### Limitations
+
+- [`moneca::moneca_segments()`](https://gmontaletti.github.io/MONECA/reference/moneca_segments.html)
+  still densifies `mat.list[[1]]` internally, so the full clustering
+  pipeline retains an in-R memory ceiling around 10^5 nodes until a
+  sparse-aware metadata path lands upstream in moneca.
+- No Arrow dataset input yet; planned follow-up.
+
+------------------------------------------------------------------------
+
+## monecascale 0.4.1
+
+### Bug fixes / completeness
+
+- [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  now supports
+  [`moneca::moneca_fast()`](https://gmontaletti.github.io/MONECA/reference/moneca_fast.html)
+  output with both criteria. The `method = "mdl"` branch scores each
+  hierarchical level via weighted modularity on the core graph
+  ([`igraph::modularity()`](https://r.igraph.org/reference/modularity.igraph.html));
+  the score column in `$diagnostics` is named `"modularity"` to reflect
+  the scoring function honestly. `method = "mi_plateau"` works
+  unchanged. This closes the deferred feature tracked as “0.3.1” in the
+  0.3.0 release notes.
+
+------------------------------------------------------------------------
+
+## monecascale 0.4.0
+
+### New features
+
+- [`moneca_flow()`](https://gmontaletti.github.io/monecascale/reference/moneca_flow.md)
+  — D3 of the scaling roadmap. Flow-based hierarchical clustering via
+  Infomap and the Map Equation. Single backend:
+  [`igraph::cluster_infomap()`](https://r.igraph.org/reference/cluster_infomap.html)
+  (R-native, scales to ~10^5 nodes). A recursive-flat wrapper
+  synthesises a 2–3 level hierarchy from the flat solution. Returns a
+  plain `moneca`-class object with `$flow_diagnostics` (codelength per
+  level, node flow assignments).
+- [`auto_segment_levels()`](https://gmontaletti.github.io/monecascale/reference/auto_segment_levels.md)
+  now recognises flow-backend objects. The MDL criterion reads
+  `codelength_per_level` and reports a `codelength` score column per
+  level.
+
+### Empirical validation
+
+On a 4-block 60-node synthetic fixture (seed 2026): - flow: ARI = 1.000,
+NMI = 1.000
+
+### Documentation
+
+- New vignette `monecascale-flow` covering the Map Equation, the
+  flat-vs-hierarchical trade-off, and a comparison of flow recovery
+  against
+  [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+  on the same fixture.
+
+### Dependencies
+
+- `igraph (>= 1.3.0)` moved from transitive (via moneca) to explicit
+  `Imports`.
+
+------------------------------------------------------------------------
+
 ## monecascale 0.3.0
 
 ### New features

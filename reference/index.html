@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,6 +60,22 @@
 
         </dt>
         <dd>Install the graph-tool Python Backend for <code><a href="../reference/moneca_sbm.html">moneca_sbm()</a></code></dd>
+      </dl></div><div class="section level2">
+      <h2 id="flow-clustering">Flow Clustering<a class="anchor" aria-label="anchor" href="#flow-clustering"></a></h2>
+
+      <div class="section-desc"><p>Infomap / Map Equation on mobility counts. Flat Infomap via igraph, with a recursive wrapper that synthesises a 2-3 level hierarchy. Output is a plain moneca-class object with a $flow_diagnostics slot.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="moneca_flow.html">moneca_flow()</a></code>
+
+        </dt>
+        <dd>Flow-based (Infomap / Map Equation) Backend for MONECA Segmentation</dd>
       </dl></div><div class="section level2">
       <h2 id="bipartite-segmentation">Bipartite Segmentation<a class="anchor" aria-label="anchor" href="#bipartite-segmentation"></a></h2>
 
@@ -134,6 +150,22 @@
 
         </dt>
         <dd>Format an `auto_segment_levels` Result</dd>
+      </dl></div><div class="section level2">
+      <h2 id="out-of-core-rr">Out-of-core RR<a class="anchor" aria-label="anchor" href="#out-of-core-rr"></a></h2>
+
+      <div class="section-desc"><p>Build a sparse relative-risk matrix from an out-of-core edge source (DuckDB / Parquet / CSV) without densifying to an R matrix. Output composes with the sparse-aware clustering backends.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rr_from_duckdb.html">rr_from_duckdb()</a></code>
+
+        </dt>
+        <dd>Build a Sparse Relative-Risk Matrix Out-of-Core via DuckDB</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

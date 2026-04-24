@@ -53,6 +53,15 @@ two linked `moneca`-class objects (`$rows`, `$cols`) consumable by
 moneca’s full analysis and plotting stack. Scales to ~10^(4–10)5
 rows/columns per side.
 
+### `moneca_flow()`
+
+Flow-based hierarchical clustering via Infomap and the Map Equation.
+Backend via
+[`igraph::cluster_infomap()`](https://r.igraph.org/reference/cluster_infomap.html)
+(R-native, scales to ~10^5 nodes). A recursive-flat wrapper synthesises
+a 2–3 level hierarchy. Returns a `moneca`-class object with
+`$flow_diagnostics` (codelength per level, node assignments).
+
 ### `auto_segment_levels()`
 
 Post-hoc hierarchy-level auto-selection from a full hierarchical fit.
@@ -64,10 +73,26 @@ Two criteria:
   where marginal MI gain drops below a threshold of the maximum MI.
 
 Available as `segment.levels = "auto"` on
-[`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+[`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md),
+[`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md),
 and
+[`moneca_flow()`](https://gmontaletti.github.io/monecascale/reference/moneca_flow.md)
+for one-shot hierarchy fitting and trimming. Recognises backend-specific
+diagnostics (MDL for SBM and flow; mutual information for bipartite).
+
+### `rr_from_duckdb()`
+
+Out-of-core sparse relative-risk matrix construction via DuckDB SQL.
+Accepts edge-list input as a data.frame, a file path (`.csv` /
+`.parquet`), or a table name on a pre-connected DuckDB instance. Returns
+a `monecascale_rr` list with sparse `$rr`, sparse `$counts`, and margin
+metadata. Composes seamlessly with
 [`moneca_bipartite()`](https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.md)
-for one-shot hierarchy fitting and trimming.
+(via `$rr`) and
+[`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+/
+[`moneca_flow()`](https://gmontaletti.github.io/monecascale/reference/moneca_flow.md)
+(via `$counts`).
 
 ## Installation
 
@@ -117,15 +142,17 @@ Roadmap](https://github.com/gmontaletti/MONECA/blob/master/reference/moneca/SCAL
 - **D2** — hierarchical DC-SBM (`moneca_sbm`, *shipped*).
 - **D1** — bipartite / two-mode (`moneca_bipartite`, *shipped*).
 - **D6** — auto-level detection (`auto_segment_levels`, *shipped*).
-- **D3** — flow-based (`moneca_flow` via Infomap, planned).
+- **D3** — flow-based (`moneca_flow` via Infomap, *shipped*).
 - **D4** — scalable clique guardrail (`moneca_localclique`, planned).
 - **D5** — Poisson NMF (`moneca_nmf`, planned).
-- **D7** — out-of-core (`moneca_duckdb` / `moneca_arrow`, planned).
+- **D7** — out-of-core
+  ([`rr_from_duckdb()`](https://gmontaletti.github.io/monecascale/reference/rr_from_duckdb.md),
+  *shipped*).
 
 ## Citation
 
     Montaletti, G. (2026). monecascale: Scalable Backends for MONECA.
-    R package version 0.3.0. https://github.com/gmontaletti/monecascale
+    R package version 0.5.0. https://github.com/gmontaletti/monecascale
 
     Montaletti, G. (2026). moneca: Mobility Network Clustering Analysis.
     R package version 1.8.0. https://github.com/gmontaletti/MONECA
@@ -152,6 +179,15 @@ Alternative backends producing moneca-class output
 
   Install the graph-tool Python Backend for
   [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
+
+## Flow Clustering
+
+Infomap / Map Equation on mobility counts. Flat Infomap via igraph, with
+a recursive wrapper that synthesises a 2-3 level hierarchy. Output is a
+plain moneca-class object with a \$flow_diagnostics slot.
+
+- [`moneca_flow()`](https://gmontaletti.github.io/monecascale/reference/moneca_flow.md)
+  : Flow-based (Infomap / Map Equation) Backend for MONECA Segmentation
 
 ## Bipartite Segmentation
 
@@ -183,6 +219,15 @@ Composes with the segment.levels = “auto” wrapper on both backends.
 - [`format(`*`<auto_segment_levels>`*`)`](https://gmontaletti.github.io/monecascale/reference/format.auto_segment_levels.md)
   : Format an \`auto_segment_levels\` Result
 
+## Out-of-core RR
+
+Build a sparse relative-risk matrix from an out-of-core edge source
+(DuckDB / Parquet / CSV) without densifying to an R matrix. Output
+composes with the sparse-aware clustering backends.
+
+- [`rr_from_duckdb()`](https://gmontaletti.github.io/monecascale/reference/rr_from_duckdb.md)
+  : Build a Sparse Relative-Risk Matrix Out-of-Core via DuckDB
+
 # Articles
 
 ### Getting Started
@@ -199,9 +244,23 @@ Rectangular mobility, RR = DcLbm residual, hierarchical co-clustering.
 - [Bipartite Segmentation with
   moneca_bipartite()](https://gmontaletti.github.io/monecascale/articles/monecascale-bipartite.md):
 
+### Flow Clustering
+
+Map Equation / Infomap for mobility communities, flat and recursive.
+
+- [Flow Clustering with
+  moneca_flow()](https://gmontaletti.github.io/monecascale/articles/monecascale-flow.md):
+
 ### Auto Level Selection
 
 MDL + MI plateau criteria for picking the right level post-hoc.
 
 - [Auto Level Selection with
   auto_segment_levels()](https://gmontaletti.github.io/monecascale/articles/monecascale-auto-level.md):
+
+### Out-of-core RR
+
+DuckDB-backed sparse RR build and composition with existing backends.
+
+- [Out-of-core RR computation with
+  DuckDB](https://gmontaletti.github.io/monecascale/articles/monecascale-duckdb.md):

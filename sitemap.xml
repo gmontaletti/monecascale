@@ -5,6 +5,8 @@
 <url><loc>https://gmontaletti.github.io/monecascale/articles/index.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/articles/monecascale-auto-level.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/articles/monecascale-bipartite.html</loc></url>
+<url><loc>https://gmontaletti.github.io/monecascale/articles/monecascale-duckdb.html</loc></url>
+<url><loc>https://gmontaletti.github.io/monecascale/articles/monecascale-flow.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/articles/monecascale-sbm.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/authors.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/index.html</loc></url>
@@ -14,12 +16,14 @@
 <url><loc>https://gmontaletti.github.io/monecascale/reference/format.moneca_bipartite.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/index.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/moneca_bipartite.html</loc></url>
+<url><loc>https://gmontaletti.github.io/monecascale/reference/moneca_flow.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/moneca_sbm.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/moneca_sbm_install_graphtool.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/monecascale-package.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/print.auto_segment_levels.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/print.moneca_bipartite.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/print.summary.moneca_bipartite.html</loc></url>
+<url><loc>https://gmontaletti.github.io/monecascale/reference/rr_from_duckdb.html</loc></url>
 <url><loc>https://gmontaletti.github.io/monecascale/reference/summary.moneca_bipartite.html</loc></url>
 </urlset>
 

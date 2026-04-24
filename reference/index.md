@@ -13,6 +13,15 @@ Alternative backends producing moneca-class output
   Install the graph-tool Python Backend for
   [`moneca_sbm()`](https://gmontaletti.github.io/monecascale/reference/moneca_sbm.md)
 
+## Flow Clustering
+
+Infomap / Map Equation on mobility counts. Flat Infomap via igraph, with
+a recursive wrapper that synthesises a 2-3 level hierarchy. Output is a
+plain moneca-class object with a \$flow_diagnostics slot.
+
+- [`moneca_flow()`](https://gmontaletti.github.io/monecascale/reference/moneca_flow.md)
+  : Flow-based (Infomap / Map Equation) Backend for MONECA Segmentation
+
 ## Bipartite Segmentation
 
 Rectangular input (person x employer, worker x occupation). Returns two
@@ -42,3 +51,12 @@ Composes with the segment.levels = “auto” wrapper on both backends.
   : Print an \`auto_segment_levels\` Result
 - [`format(`*`<auto_segment_levels>`*`)`](https://gmontaletti.github.io/monecascale/reference/format.auto_segment_levels.md)
   : Format an \`auto_segment_levels\` Result
+
+## Out-of-core RR
+
+Build a sparse relative-risk matrix from an out-of-core edge source
+(DuckDB / Parquet / CSV) without densifying to an R matrix. Output
+composes with the sparse-aware clustering backends.
+
+- [`rr_from_duckdb()`](https://gmontaletti.github.io/monecascale/reference/rr_from_duckdb.md)
+  : Build a Sparse Relative-Risk Matrix Out-of-Core via DuckDB

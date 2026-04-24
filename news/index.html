@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,60 @@
       <small>Source: <a href="https://github.com/gmontaletti/monecascale/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="monecascale-050">monecascale 0.5.0<a class="anchor" aria-label="anchor" href="#monecascale-050"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-5-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/rr_from_duckdb.html">rr_from_duckdb()</a></code> — build a sparse relative-risk matrix out of core via DuckDB SQL. Accepts edge-list input as a data.frame, a file path (<code>.csv</code> / <code>.parquet</code>), or a table name on a pre-connected DuckDB instance. Returns a <code>"monecascale_rr"</code> list with sparse <code>$rr</code>, sparse <code>$counts</code>, and margin / node-name metadata. Composes with <code><a href="../reference/moneca_bipartite.html">moneca_bipartite()</a></code> (via <code>$rr</code>) and <code><a href="../reference/moneca_sbm.html">moneca_sbm()</a></code> / <code><a href="../reference/moneca_flow.html">moneca_flow()</a></code> (via <code>$counts</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependencies-0-5-0">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-0-5-0"></a></h3>
+<ul><li>
+<code>duckdb (&gt;= 1.0.0)</code> and <code>DBI (&gt;= 1.2.0)</code> added to <code>Suggests</code>. The package degrades gracefully with an informative error when either is missing.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-5-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-0"></a></h3>
+<ul><li>New vignette <code>monecascale-duckdb</code> covering the RR bottleneck, the SQL recipe, three input modes, and end-to-end composition with the existing clustering backends.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="limitations-0-5-0">Limitations<a class="anchor" aria-label="anchor" href="#limitations-0-5-0"></a></h3>
+<ul><li>
+<code><a href="https://gmontaletti.github.io/MONECA/reference/moneca_segments.html" class="external-link">moneca::moneca_segments()</a></code> still densifies <code>mat.list[[1]]</code> internally, so the full clustering pipeline retains an in-R memory ceiling around 10^5 nodes until a sparse-aware metadata path lands upstream in moneca.</li>
+<li>No Arrow dataset input yet; planned follow-up.</li>
+</ul><hr></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.1" id="monecascale-041">monecascale 0.4.1<a class="anchor" aria-label="anchor" href="#monecascale-041"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes--completeness-0-4-1">Bug fixes / completeness<a class="anchor" aria-label="anchor" href="#bug-fixes--completeness-0-4-1"></a></h3>
+<ul><li>
+<code><a href="../reference/auto_segment_levels.html">auto_segment_levels()</a></code> now supports <code><a href="https://gmontaletti.github.io/MONECA/reference/moneca_fast.html" class="external-link">moneca::moneca_fast()</a></code> output with both criteria. The <code>method = "mdl"</code> branch scores each hierarchical level via weighted modularity on the core graph (<code><a href="https://r.igraph.org/reference/modularity.igraph.html" class="external-link">igraph::modularity()</a></code>); the score column in <code>$diagnostics</code> is named <code>"modularity"</code> to reflect the scoring function honestly. <code>method = "mi_plateau"</code> works unchanged. This closes the deferred feature tracked as “0.3.1” in the 0.3.0 release notes.</li>
+</ul><hr></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="monecascale-040">monecascale 0.4.0<a class="anchor" aria-label="anchor" href="#monecascale-040"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0"></a></h3>
+<ul><li>
+<code><a href="../reference/moneca_flow.html">moneca_flow()</a></code> — D3 of the scaling roadmap. Flow-based hierarchical clustering via Infomap and the Map Equation. Single backend: <code><a href="https://r.igraph.org/reference/cluster_infomap.html" class="external-link">igraph::cluster_infomap()</a></code> (R-native, scales to ~10^5 nodes). A recursive-flat wrapper synthesises a 2–3 level hierarchy from the flat solution. Returns a plain <code>moneca</code>-class object with <code>$flow_diagnostics</code> (codelength per level, node flow assignments).</li>
+<li>
+<code><a href="../reference/auto_segment_levels.html">auto_segment_levels()</a></code> now recognises flow-backend objects. The MDL criterion reads <code>codelength_per_level</code> and reports a <code>codelength</code> score column per level.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="empirical-validation-0-4-0">Empirical validation<a class="anchor" aria-label="anchor" href="#empirical-validation-0-4-0"></a></h3>
+<p>On a 4-block 60-node synthetic fixture (seed 2026): - flow: ARI = 1.000, NMI = 1.000</p>
+</div>
+<div class="section level3">
+<h3 id="documentation-0-4-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-4-0"></a></h3>
+<ul><li>New vignette <code>monecascale-flow</code> covering the Map Equation, the flat-vs-hierarchical trade-off, and a comparison of flow recovery against <code><a href="../reference/moneca_sbm.html">moneca_sbm()</a></code> on the same fixture.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="dependencies-0-4-0">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies-0-4-0"></a></h3>
+<ul><li>
+<code>igraph (&gt;= 1.3.0)</code> moved from transitive (via moneca) to explicit <code>Imports</code>.</li>
+</ul><hr></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="monecascale-030">monecascale 0.3.0<a class="anchor" aria-label="anchor" href="#monecascale-030"></a></h2>
 <div class="section level3">

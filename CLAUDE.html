@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">monecascale</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,6 +69,10 @@
 <code><a href="reference/moneca_bipartite.html">moneca_bipartite()</a></code> — hierarchical bipartite co-clustering via <code><a href="https://comeetie.github.io/greed/reference/DcLbm.html" class="external-link">greed::DcLbm</a></code> on rectangular RR. Returns <code>moneca_bipartite</code> wrapping two moneca-class views (<code>$rows</code>, <code>$cols</code>). Shipped in 0.2.0.</li>
 <li>
 <code><a href="reference/auto_segment_levels.html">auto_segment_levels()</a></code> — post-hoc hierarchy-level selection via MDL elbow or mutual information plateau; also available as <code>segment.levels = "auto"</code> on <code><a href="reference/moneca_sbm.html">moneca_sbm()</a></code> and <code><a href="reference/moneca_bipartite.html">moneca_bipartite()</a></code>. Shipped in 0.3.0.</li>
+<li>
+<code><a href="reference/moneca_flow.html">moneca_flow()</a></code> — flow-based hierarchical clustering via Infomap (Map Equation). Backend via <code><a href="https://r.igraph.org/reference/cluster_infomap.html" class="external-link">igraph::cluster_infomap()</a></code> (R-native, scales to ~10^5 nodes). Recursive-flat wrapper for 2–3 level hierarchy. Shipped in 0.4.0.</li>
+<li>
+<code><a href="reference/rr_from_duckdb.html">rr_from_duckdb()</a></code> — out-of-core sparse RR build via DuckDB SQL. Accepts data.frame / Parquet / CSV / DuckDB table. Returns a <code>monecascale_rr</code> list with sparse <code>$rr</code>, <code>$counts</code>, and margins. Shipped in 0.5.0.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="planned-directions-scaling-roadmap">Planned directions (scaling roadmap)<a class="anchor" aria-label="anchor" href="#planned-directions-scaling-roadmap"></a></h2>
@@ -76,15 +80,15 @@
 <ul><li>
 <del><strong>D1</strong> <code><a href="reference/moneca_bipartite.html">moneca_bipartite()</a></code></del> — <strong>SHIPPED 0.2.0</strong>.</li>
 <li>
-<del><strong>D6</strong> <code><a href="reference/auto_segment_levels.html">auto_segment_levels()</a></code></del> — <strong>SHIPPED 0.3.0</strong> for SBM and bipartite. moneca_fast() support pending 0.3.1.</li>
+<del><strong>D6</strong> <code><a href="reference/auto_segment_levels.html">auto_segment_levels()</a></code></del> — <strong>SHIPPED 0.3.0</strong> for SBM and bipartite. Fast-backend support added in 0.4.1.</li>
 <li>
-<strong>D3</strong> <code>moneca_flow()</code> — Infomap / Map Equation.</li>
+<del><strong>D3</strong> <code><a href="reference/moneca_flow.html">moneca_flow()</a></code></del> — <strong>SHIPPED 0.4.0</strong> Infomap / Map Equation.</li>
 <li>
 <strong>D4</strong> <code>moneca_localclique()</code> — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.</li>
 <li>
 <strong>D5</strong> <code>moneca_nmf()</code> — Poisson NMF.</li>
 <li>
-<strong>D7</strong> <code>moneca_duckdb()</code> / <code>moneca_arrow()</code> — out-of-core / streaming backend.</li>
+<del><strong>D7</strong> moneca_duckdb / moneca_arrow</del> — <strong>SHIPPED 0.5.0</strong> (as rr_from_duckdb).</li>
 </ul></div>
 <div class="section level2">
 <h2 id="package-development-commands">Package Development Commands<a class="anchor" aria-label="anchor" href="#package-development-commands"></a></h2>
@@ -136,6 +140,16 @@
 <li>
 <code>R/auto_level_methods.R</code> — <code>print</code> / <code>format</code> for <code>auto_segment_levels</code>.</li>
 <li>
+<code>R/moneca_flow.R</code> — public <code><a href="reference/moneca_flow.html">moneca_flow()</a></code> entry + backend dispatcher.</li>
+<li>
+<code>R/flow_backend_igraph.R</code> — igraph <code>cluster_infomap()</code> backend.</li>
+<li>
+<code>R/flow_utils.R</code> — recursive-flat hierarchy synthesis and adapter.</li>
+<li>
+<code>R/rr_from_duckdb.R</code> — public <code><a href="reference/rr_from_duckdb.html">rr_from_duckdb()</a></code> entry for out-of-core RR construction.</li>
+<li>
+<code>R/duckdb_utils.R</code> — DuckDB SQL recipe, input dispatch, and sparse matrix assembly.</li>
+<li>
 <code>tests/testthat/helper-test-data.R</code> — shared generators wrapping <code><a href="https://gmontaletti.github.io/MONECA/reference/generate_mobility_data.html" class="external-link">moneca::generate_mobility_data()</a></code>.</li>
 <li>
 <code>vignettes/monecascale-sbm.Rmd</code> — RR ≡ DC-SBM bridge walkthrough and parity experiment.</li>
@@ -143,6 +157,10 @@
 <code>vignettes/monecascale-bipartite.Rmd</code> — bipartite walkthrough + recovery experiment.</li>
 <li>
 <code>vignettes/monecascale-auto-level.Rmd</code> — auto-level walkthrough.</li>
+<li>
+<code>vignettes/monecascale-flow.Rmd</code> — Map Equation, flat-vs-hierarchical trade-off, comparison vs SBM.</li>
+<li>
+<code>vignettes/monecascale-duckdb.Rmd</code> — out-of-core RR bottleneck, SQL recipe, three input modes, composition with backends.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="coding-conventions">Coding conventions<a class="anchor" aria-label="anchor" href="#coding-conventions"></a></h2>
