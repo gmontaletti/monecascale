@@ -22,6 +22,14 @@ reference:
     contents:
       - moneca_sbm
       - moneca_sbm_install_graphtool
+  - title: "Flow Clustering"
+    desc: >
+      Infomap / Map Equation on mobility counts. Flat Infomap via
+      igraph, with a recursive wrapper that synthesises a 2-3 level
+      hierarchy. Output is a plain moneca-class object with a
+      $flow_diagnostics slot.
+    contents:
+      - moneca_flow
   - title: "Bipartite Segmentation"
     desc: >
       Rectangular input (person x employer, worker x occupation).
@@ -53,6 +61,10 @@ articles:
     desc: "Rectangular mobility, RR = DcLbm residual, hierarchical co-clustering."
     contents:
       - monecascale-bipartite
+  - title: "Flow Clustering"
+    desc: "Map Equation / Infomap for mobility communities, flat and recursive."
+    contents:
+      - monecascale-flow
   - title: "Auto Level Selection"
     desc: "MDL + MI plateau criteria for picking the right level post-hoc."
     contents:
