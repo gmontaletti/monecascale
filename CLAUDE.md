@@ -27,6 +27,9 @@ Every exported entry point returns a `moneca`-class S3 object, so moneca's analy
 - `auto_segment_levels()` — post-hoc hierarchy-level selection via MDL elbow
   or mutual information plateau; also available as `segment.levels = "auto"`
   on `moneca_sbm()` and `moneca_bipartite()`. Shipped in 0.3.0.
+- `moneca_flow()` — flow-based hierarchical clustering via Infomap (Map Equation).
+  Backend via `igraph::cluster_infomap()` (R-native, scales to ~10^5 nodes). Recursive-flat
+  wrapper for 2–3 level hierarchy. Shipped in 0.4.0.
 
 ## Planned directions (scaling roadmap)
 
@@ -34,7 +37,7 @@ Landed here unless otherwise noted. See `~/.claude/plans/monecascale-scaling-roa
 
 - ~~**D1** `moneca_bipartite()`~~ — **SHIPPED 0.2.0**.
 - ~~**D6** `auto_segment_levels()`~~ — **SHIPPED 0.3.0** for SBM and bipartite. moneca_fast() support pending 0.3.1.
-- **D3** `moneca_flow()` — Infomap / Map Equation.
+- ~~**D3** `moneca_flow()`~~ — **SHIPPED 0.4.0** Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.
 - **D5** `moneca_nmf()` — Poisson NMF.
 - **D7** `moneca_duckdb()` / `moneca_arrow()` — out-of-core / streaming backend.
@@ -76,10 +79,14 @@ covr::package_coverage()
 - `R/auto_segment_levels.R` — public `auto_segment_levels()` entry + dispatcher + trim helper.
 - `R/auto_level_criteria.R` — MDL (kneedle / max_second_diff) and MI-plateau criteria.
 - `R/auto_level_methods.R` — `print` / `format` for `auto_segment_levels`.
+- `R/moneca_flow.R` — public `moneca_flow()` entry + backend dispatcher.
+- `R/flow_backend_igraph.R` — igraph `cluster_infomap()` backend.
+- `R/flow_utils.R` — recursive-flat hierarchy synthesis and adapter.
 - `tests/testthat/helper-test-data.R` — shared generators wrapping `moneca::generate_mobility_data()`.
 - `vignettes/monecascale-sbm.Rmd` — RR ≡ DC-SBM bridge walkthrough and parity experiment.
 - `vignettes/monecascale-bipartite.Rmd` — bipartite walkthrough + recovery experiment.
 - `vignettes/monecascale-auto-level.Rmd` — auto-level walkthrough.
+- `vignettes/monecascale-flow.Rmd` — Map Equation, flat-vs-hierarchical trade-off, comparison vs SBM.
 
 ## Coding conventions
 

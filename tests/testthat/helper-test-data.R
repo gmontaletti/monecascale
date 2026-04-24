@@ -73,3 +73,40 @@ get_bipartite_test_data <- function(
   attr(mx, "col_block") <- col_block
   mx
 }
+
+# 2. Flow fixture for moneca_flow() tests ------------------------------------
+#
+# Square Poisson draws from a planted-community model. Nodes are assigned
+# modules round-robin; within-module pairs draw Poisson(n * p_in),
+# between-module pairs draw Poisson(n * p_out). Diagonal zeroed so the
+# fixture carries no self-loops. Returns a dense matrix with the
+# ground-truth module membership in `attr(, "module")`.
+
+get_flow_test_data <- function(
+  n = 40,
+  n_modules = 4,
+  p_in = 0.3,
+  p_out = 0.02,
+  seed = 2026
+) {
+  set.seed(seed)
+  mod <- rep(seq_len(n_modules), length.out = n)
+  lambda_in <- n * p_in
+  lambda_out <- n * p_out
+
+  mx <- matrix(0L, nrow = n, ncol = n)
+  for (i in seq_len(n)) {
+    for (j in seq_len(n)) {
+      mx[i, j] <- stats::rpois(
+        1,
+        lambda = if (mod[i] == mod[j]) lambda_in else lambda_out
+      )
+    }
+  }
+  diag(mx) <- 0L
+
+  rownames(mx) <- paste0("N", seq_len(n))
+  colnames(mx) <- paste0("N", seq_len(n))
+  attr(mx, "module") <- as.integer(mod)
+  mx
+}

@@ -26,6 +26,10 @@ Hierarchical degree-corrected stochastic block model (DC-SBM) clustering. Two di
 
 Degree-corrected Latent Block Model (DcLbm) for rectangular person × employer (or worker × occupation) mobility matrices. Output comprises two linked `moneca`-class objects (`$rows`, `$cols`) consumable by moneca's full analysis and plotting stack. Scales to ~10^4–10^5 rows/columns per side.
 
+### `moneca_flow()`
+
+Flow-based hierarchical clustering via Infomap and the Map Equation. Backend via `igraph::cluster_infomap()` (R-native, scales to ~10^5 nodes). A recursive-flat wrapper synthesises a 2–3 level hierarchy. Returns a `moneca`-class object with `$flow_diagnostics` (codelength per level, node assignments).
+
 ### `auto_segment_levels()`
 
 Post-hoc hierarchy-level auto-selection from a full hierarchical fit. Two criteria:
@@ -33,7 +37,7 @@ Post-hoc hierarchy-level auto-selection from a full hierarchical fit. Two criter
 - `method = "mdl"` — MDL elbow detection via kneedle algorithm (Satopää et al. 2011), with `max_second_diff` fallback.
 - `method = "mi_plateau"` — mutual-information plateau: picks the level where marginal MI gain drops below a threshold of the maximum MI.
 
-Available as `segment.levels = "auto"` on `moneca_sbm()` and `moneca_bipartite()` for one-shot hierarchy fitting and trimming.
+Available as `segment.levels = "auto"` on `moneca_sbm()`, `moneca_bipartite()`, and `moneca_flow()` for one-shot hierarchy fitting and trimming. Recognises backend-specific diagnostics (MDL for SBM and flow; mutual information for bipartite).
 
 ## Installation
 
@@ -78,7 +82,7 @@ See `vignette("monecascale-sbm")` for the RR ≡ DC-SBM residual walkthrough, th
 - **D2** — hierarchical DC-SBM (`moneca_sbm`, *shipped*).
 - **D1** — bipartite / two-mode (`moneca_bipartite`, *shipped*).
 - **D6** — auto-level detection (`auto_segment_levels`, *shipped*).
-- **D3** — flow-based (`moneca_flow` via Infomap, planned).
+- **D3** — flow-based (`moneca_flow` via Infomap, *shipped*).
 - **D4** — scalable clique guardrail (`moneca_localclique`, planned).
 - **D5** — Poisson NMF (`moneca_nmf`, planned).
 - **D7** — out-of-core (`moneca_duckdb` / `moneca_arrow`, planned).
@@ -87,7 +91,7 @@ See `vignette("monecascale-sbm")` for the RR ≡ DC-SBM residual walkthrough, th
 
 ```
 Montaletti, G. (2026). monecascale: Scalable Backends for MONECA.
-R package version 0.3.0. https://github.com/gmontaletti/monecascale
+R package version 0.4.0. https://github.com/gmontaletti/monecascale
 
 Montaletti, G. (2026). moneca: Mobility Network Clustering Analysis.
 R package version 1.8.0. https://github.com/gmontaletti/MONECA

@@ -12,17 +12,25 @@
 .criterion_mdl <- function(obj, backend, elbow, verbose) {
   src <- switch(
     backend,
+    flow = list(
+      mdl = obj$flow_diagnostics$codelength_per_level,
+      n_blocks = obj$flow_diagnostics$n_blocks_per_level,
+      score_col = "codelength"
+    ),
     sbm = list(
       mdl = obj$sbm_diagnostics$mdl_per_level,
-      n_blocks = obj$sbm_diagnostics$n_blocks_per_level
+      n_blocks = obj$sbm_diagnostics$n_blocks_per_level,
+      score_col = "mdl"
     ),
     bipartite_rows = list(
       mdl = obj$bipartite_diagnostics_side$joint_mdl_per_level,
-      n_blocks = obj$bipartite_diagnostics_side$n_blocks_per_level
+      n_blocks = obj$bipartite_diagnostics_side$n_blocks_per_level,
+      score_col = "mdl"
     ),
     bipartite_cols = list(
       mdl = obj$bipartite_diagnostics_side$joint_mdl_per_level,
-      n_blocks = obj$bipartite_diagnostics_side$n_blocks_per_level
+      n_blocks = obj$bipartite_diagnostics_side$n_blocks_per_level,
+      score_col = "mdl"
     ),
     stop(
       "Unsupported backend for .criterion_mdl(): ",
@@ -33,6 +41,7 @@
 
   mdl <- as.numeric(src$mdl)
   n_blocks <- as.integer(src$n_blocks)
+  score_col <- src$score_col
 
   # Trivial fit: no backend levels recovered. The only available level is
   # the atomic level 1 in segment.list. Return that rather than erroring.
@@ -40,11 +49,19 @@
     diag_df_empty <- data.frame(
       level = integer(0),
       n_blocks = integer(0),
-      mdl = numeric(0),
       mi_to_next = numeric(0),
       score = numeric(0),
       stringsAsFactors = FALSE
     )
+    # Insert a typed empty score column under the backend-specific name.
+    diag_df_empty[[score_col]] <- numeric(0)
+    diag_df_empty <- diag_df_empty[, c(
+      "level",
+      "n_blocks",
+      score_col,
+      "mi_to_next",
+      "score"
+    )]
     return(list(
       level = 1L,
       method = "mdl",
@@ -96,11 +113,20 @@
   diag_df <- data.frame(
     level = seq_len(L) + 1L,
     n_blocks = n_blocks,
-    mdl = mdl,
     mi_to_next = NA_real_,
     score = mdl,
     stringsAsFactors = FALSE
   )
+  # Insert the backend-specific score column ("mdl" or "codelength")
+  # between n_blocks and mi_to_next so the layout is stable.
+  diag_df[[score_col]] <- mdl
+  diag_df <- diag_df[, c(
+    "level",
+    "n_blocks",
+    score_col,
+    "mi_to_next",
+    "score"
+  )]
 
   list(
     level = as.integer(segment_level),

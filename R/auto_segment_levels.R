@@ -173,6 +173,9 @@ auto_segment_levels <- function(
 #' @keywords internal
 #' @noRd
 .detect_backend <- function(obj) {
+  if (!is.null(obj$flow_diagnostics)) {
+    return("flow")
+  }
   if (!is.null(obj$sbm_diagnostics)) {
     return("sbm")
   }

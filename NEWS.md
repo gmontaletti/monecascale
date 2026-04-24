@@ -1,3 +1,35 @@
+# monecascale 0.4.0
+
+## New features
+
+* `moneca_flow()` — D3 of the scaling roadmap. Flow-based hierarchical
+  clustering via Infomap and the Map Equation. Single backend:
+  `igraph::cluster_infomap()` (R-native, scales to ~10^5 nodes). A
+  recursive-flat wrapper synthesises a 2–3 level hierarchy from the flat
+  solution. Returns a plain `moneca`-class object with `$flow_diagnostics`
+  (codelength per level, node flow assignments).
+* `auto_segment_levels()` now recognises flow-backend objects. The MDL
+  criterion reads `codelength_per_level` and reports a `codelength` score
+  column per level.
+
+## Empirical validation
+
+On a 4-block 60-node synthetic fixture (seed 2026):
+- flow: ARI = 1.000, NMI = 1.000
+
+## Documentation
+
+* New vignette `monecascale-flow` covering the Map Equation, the
+  flat-vs-hierarchical trade-off, and a comparison of flow recovery
+  against `moneca_sbm()` on the same fixture.
+
+## Dependencies
+
+* `igraph (>= 1.3.0)` moved from transitive (via moneca) to explicit
+  `Imports`.
+
+---
+
 # monecascale 0.3.0
 
 ## New features

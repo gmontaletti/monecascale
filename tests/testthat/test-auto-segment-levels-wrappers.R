@@ -92,3 +92,13 @@ test_that("moneca_sbm(segment.levels=3L) does not attach $auto_level", {
   expect_s3_class(out, "moneca")
   expect_null(out$auto_level)
 })
+
+# 6. Flow wrapper, default auto_method = "mdl" -------------------------------
+
+test_that("moneca_flow(segment.levels = 'auto') attaches $auto_level", {
+  skip_if_not_installed("igraph")
+  mx <- get_flow_test_data(n = 30, n_modules = 3, seed = 2026)
+  out <- moneca_flow(mx, depth = 3L, segment.levels = "auto", seed = 2026)
+  expect_s3_class(out$auto_level, "auto_segment_levels")
+  expect_equal(length(out$segment.list), out$auto_level$level)
+})

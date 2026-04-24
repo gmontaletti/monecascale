@@ -1,0 +1,307 @@
+---
+title: "Flow Clustering with moneca_flow()"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{monecascale-flow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150,
+  out.width = "100%"
+)
+
+# Eval-gate on igraph (the only flow backend shipped in 0.4.0) and on
+# moneca (always present as a hard dependency, but gating keeps the
+# vignette renderable outside an installed environment).
+have_igraph <- requireNamespace("igraph", quietly = TRUE)
+have_moneca <- requireNamespace("moneca", quietly = TRUE)
+if (!(have_igraph && have_moneca)) {
+  knitr::opts_chunk$set(eval = FALSE)
+}
+
+have_greed   <- requireNamespace("greed", quietly = TRUE)
+have_mclust  <- requireNamespace("mclust", quietly = TRUE)
+have_ggraph  <- requireNamespace("ggraph", quietly = TRUE)
+have_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
+```
+
+## 1. Introduction
+
+`moneca_flow()` is the flow-based clustering backend for MONECA. It
+clusters the mobility graph under the Map Equation (Rosvall &
+Bergstrom, 2008): a random walker traverses the directed mobility
+network and modules are extracted as regions where the walker tends
+to stay for many steps before transitioning away. This reading aligns
+directly with the substantive semantics of the data — workers flow
+through jobs, and modules trap flow.
+
+Three backends cover complementary views of the same mobility matrix:
+
+- `moneca::moneca_fast()` — clique enumeration on the thresholded
+  relative-risk (RR) matrix.
+- `moneca_sbm()` (direction D2) — hierarchical DC-SBM on the RR
+  residual. See `vignette("monecascale-sbm")` for the theoretical
+  bridge and an empirical parity experiment.
+- `moneca_bipartite()` (direction D1) — hierarchical DC-LBM on
+  rectangular mobility, joint on both sides.
+- `moneca_flow()` (direction D3, this vignette) — Infomap on raw
+  mobility flow, with a recursive wrapper that synthesises an
+  approximate hierarchy.
+
+The SBM view clusters nodes that are stochastically equivalent under
+the independence null; the flow view clusters nodes that the walker
+visits together. The two views frequently agree in the high-signal
+regime and may diverge where directional asymmetry matters. Section 7
+shows a side-by-side comparison on a single fixture.
+
+## 2. The Map Equation
+
+The Map Equation frames community detection as a lossless coding
+problem. Given a partition `M` of the graph into modules, the
+walker's trajectory is encoded with a two-level codebook: an
+index-level codebook for module-to-module transitions, and one
+per-module codebook for within-module node visits plus a module exit
+symbol. The average number of bits per step under this encoding is
+the codelength
+
+$$
+L(M) = q_\curvearrowleft\, H(\mathcal{Q}) + \sum_{k=1}^{K} p_k^{\circlearrowright}\, H(\mathcal{P}_k),
+$$
+
+where `q_↶` is the total module-switching rate, `H(Q)` is the entropy
+of the index codebook, `p_k^↻` is the within-module use rate of
+module `k`, and `H(P_k)` is the entropy of its within-module
+codebook. Minimising `L(M)` is equivalent to maximising the
+compression of the walker's trajectory: modules that trap flow for
+many steps shorten the description, modules that shuffle flow around
+lengthen it.
+
+In MONECA the edges are directed mobility counts, so the stationary
+distribution used to weight the entropies is computed from PageRank
+on the directed graph. `moneca_flow()` computes `L(M)` directly on
+the full graph for every level of the hierarchy, so codelength values
+are comparable across levels rather than inferred from sub-module
+fits.
+
+## 3. Flat vs recursive hierarchy
+
+`igraph::cluster_infomap()`, the engine behind the `"igraph"`
+backend, returns a flat partition. To expose a hierarchy compatible
+with moneca's multi-level contract, `moneca_flow()` applies a
+recursive wrapper: for level 2 it re-runs flat Infomap on each
+level-1 module's induced subgraph; for level 3 it recurses once more
+on each level-2 sub-module. Parent modules smaller than two nodes
+become singleton children.
+
+This is an **approximation** to true hierarchical Infomap. The
+orthodox hierarchical Map Equation (Rosvall et al., 2009) jointly
+optimises the codelength of the full hierarchy, trading off top-level
+compression against sub-module compression in a single criterion.
+Recursive flat fits instead optimise each level independently and
+then stack the results. On well-separated block structures the two
+agree closely; on ambiguous or deeply nested hierarchies the
+recursive approximation can under- or over-fit specific levels.
+
+Users who need joint-MDL hierarchical Infomap should watch for a
+`bioregion`-backed or `"infomap_cpp"` backend planned for a future
+release. The recursive flat approach is shipped now because it keeps
+the dependency surface to `igraph` alone.
+
+## 4. Quick start
+
+A minimal end-to-end run on a synthetic block-Poisson fixture:
+
+```{r quick-start}
+library(monecascale)
+
+# 1. inline block-Poisson fixture -----
+set.seed(2026)
+n <- 21
+block <- rep(1:3, each = 7)
+lambda <- outer(block, block, function(g, h) ifelse(g == h, 6, 0.2))
+M <- matrix(stats::rpois(n * n, lambda = lambda), n, n)
+diag(M) <- 0
+rownames(M) <- colnames(M) <- paste0("N", seq_len(n))
+
+# 2. flow fit -----
+out <- monecascale::moneca_flow(M, depth = 2L, seed = 2026)
+out
+
+# 3. codelength trace and per-level block counts -----
+out$flow_diagnostics$codelength_per_level
+out$flow_diagnostics$n_blocks_per_level
+```
+
+`out` is a regular moneca-class object: `segment.list`, `mat.list`,
+and `segment_metadata` follow the same contract as
+`moneca::moneca_fast()`. The `$flow_diagnostics` slot adds the flow-
+specific trace (codelength per level, block counts, backend, depth).
+`$flow_diagnostics$mdl_per_level` is an alias of
+`$codelength_per_level` so tooling keyed on `$mdl_per_level` consumes
+flow output unchanged.
+
+## 5. Auto-level selection
+
+The auto-level machinery (`auto_segment_levels()`, direction D6)
+composes with flow fits without modification. The MDL criterion
+reads the codelength trace under the hood; diagnostics are exposed
+in a `codelength` column rather than `mdl` to match the flow
+semantics.
+
+```{r auto-post-hoc}
+# 1. post-hoc pick from a full-hierarchy fit -----
+pick <- monecascale::auto_segment_levels(out, method = "mdl")
+pick
+pick$diagnostics
+```
+
+The wrapper form trims the fit to the picked level in one call:
+
+```{r auto-wrapper}
+out_auto <- monecascale::moneca_flow(
+  M,
+  depth = 2L,
+  seed = 2026,
+  segment.levels = "auto",
+  auto_method = "mdl"
+)
+
+# Number of levels retained after trimming, plus the picker record
+length(out_auto$segment.list)
+out_auto$auto_level$level
+```
+
+`method = "mi_plateau"` works identically on flow fits: it reads
+memberships from `segment.list` and never touches the backend trace,
+so it is backend-agnostic.
+
+## 6. Downstream compatibility
+
+Flow fits reuse moneca's entire analysis and plotting stack.
+Membership extraction and segment quality diagnostics run unchanged:
+
+```{r downstream-membership}
+# 1. level-2 memberships as a vector -----
+mem_l2 <- moneca::segment.membership(out, level = 2)
+head(mem_l2)
+```
+
+```{r downstream-quality}
+# 2. moneca's segment-quality summary on the flow fit -----
+moneca::segment.quality(out)
+```
+
+ggraph-based plotting is gated on the optional `ggraph` dependency:
+
+```{r downstream-ggraph, eval = have_igraph && have_moneca && have_ggraph}
+moneca::plot_moneca_ggraph(out, level = 2)
+```
+
+## 7. SBM vs Flow on the same fixture
+
+The SBM and flow views answer different structural questions on the
+same data. Running both on a single fixture makes the comparison
+concrete. We reuse the fixture from section 4 and fit both backends
+with two recursion / hierarchy levels.
+
+```{r compare-fits, eval = have_igraph && have_moneca && have_greed}
+# 1. flow fit -----
+fit_flow <- monecascale::moneca_flow(M, depth = 2L, seed = 2026)
+
+# 2. SBM fit (greed backend) -----
+fit_sbm <- monecascale::moneca_sbm(
+  M,
+  backend = "greed",
+  seed = 2026
+)
+
+# 3. level-1 memberships from each -----
+mem_flow <- moneca::segment.membership(fit_flow, level = 2)
+mem_sbm  <- moneca::segment.membership(fit_sbm,  level = 2)
+
+length(unique(mem_flow))
+length(unique(mem_sbm))
+```
+
+If `mclust` is available we can quantify agreement with the adjusted
+Rand index and normalised mutual information.
+
+```{r compare-ari, eval = have_igraph && have_moneca && have_greed && have_mclust}
+ari <- mclust::adjustedRandIndex(mem_flow, mem_sbm)
+nmi <- {
+  # 1. plug-in NMI from a contingency table -----
+  tab <- table(mem_flow, mem_sbm)
+  p   <- tab / sum(tab)
+  pr  <- rowSums(p)
+  pc  <- colSums(p)
+  H   <- function(x) {
+    x <- x[x > 0]
+    -sum(x * log(x))
+  }
+  mi <- sum(p[p > 0] * log(p[p > 0] / outer(pr, pc)[p > 0]))
+  mi / sqrt(H(pr) * H(pc))
+}
+c(ARI = ari, NMI = nmi)
+```
+
+On block-Poisson fixtures with clean planted structure the two
+backends converge: flow and SBM recover the same partition because
+both the stationary flow and the stochastic-equivalence signal point
+at the same blocks. They diverge when directional asymmetry carries
+real structure — for instance, when a transient module feeds flow
+into an absorbing one: flow tends to merge them into a single trap,
+SBM keeps them distinct because their in/out degree profiles differ.
+Running both and inspecting disagreement is a practical diagnostic.
+
+## 8. Limitations
+
+- **Recursive flat approximates joint-MDL hierarchical Infomap.** The
+  shipped wrapper optimises each level independently. For strict
+  hierarchical codelength minimisation use the standalone Infomap
+  C++ binary; a `bioregion`-backed backend is planned for v0.5.0.
+- **No overlapping communities.** The underlying Map Equation
+  supports overlapping modules via the two-level memory-based
+  variant, but `moneca_flow()` produces hard partitions only. The
+  moneca contract assumes hard membership vectors.
+- **Raw mobility counts only.** `moneca_flow()` does not apply the
+  RR transformation. Users who want RR-weighted flow clustering
+  should preprocess the matrix themselves, or reach for
+  `moneca_sbm()` which consumes RR natively via the DC-SBM bridge.
+- **Single backend in 0.4.0.** Only the `igraph` backend is shipped.
+  The `"infomap_cpp"` keyword is reserved but not wired up.
+- **Depth capped at 3.** The recursive wrapper supports `depth` in
+  `1:3`. Deeper hierarchies rarely add signal and are better served
+  by auto-level selection on a full SBM hierarchy.
+
+## 9. References
+
+- Rosvall, M., & Bergstrom, C. T. (2008). Maps of random walks on
+  complex networks reveal community structure. *PNAS*, 105(4),
+  1118-1123.
+- Rosvall, M., Axelsson, D., & Bergstrom, C. T. (2009). The map
+  equation. *European Physical Journal Special Topics*, 178,
+  13-23.
+- Satopaa, V., Albrecht, J., Irwin, D., & Raghavan, B. (2011).
+  Finding a "Kneedle" in a Haystack: Detecting Knee Points in
+  System Behavior. *31st International Conference on Distributed
+  Computing Systems Workshops*, 166-171.
+- Karrer, B., & Newman, M. E. J. (2011). Stochastic blockmodels and
+  community structure in networks. *Physical Review E*, 83, 016107.
+
+```{r no-igraph-note, echo = FALSE, eval = !(have_igraph && have_moneca)}
+cat(
+  "Note: igraph (and/or moneca) was not available when this vignette\n",
+  "was built. The code chunks above were not evaluated. Install\n",
+  "igraph with install.packages('igraph') to reproduce the examples.\n",
+  sep = ""
+)
+```

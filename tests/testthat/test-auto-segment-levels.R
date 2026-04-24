@@ -154,3 +154,16 @@ test_that("print.auto_segment_levels emits a recognizable header", {
 
   expect_output(print(res), regexp = "auto_segment_levels|level")
 })
+
+# 11. Flow backend ------------------------------------------------------------
+
+test_that("auto_segment_levels works on flow backend", {
+  skip_if_not_installed("igraph")
+  mx <- get_flow_test_data(n = 30, n_modules = 3, seed = 2026)
+  fit <- moneca_flow(mx, depth = 3L, nb_trials = 10L, seed = 2026)
+  res <- auto_segment_levels(fit, method = "mdl")
+  expect_s3_class(res, "auto_segment_levels")
+  expect_equal(res$backend, "flow")
+  expect_true("codelength" %in% colnames(res$diagnostics))
+  expect_true(res$level >= 1L && res$level <= length(fit$segment.list))
+})
