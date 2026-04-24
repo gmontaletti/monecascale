@@ -224,9 +224,9 @@ fit_sbm <- monecascale::moneca_sbm(
   seed = 2026
 )
 
-# 3. level-1 memberships from each -----
-mem_flow <- moneca::segment.membership(fit_flow, level = 2)
-mem_sbm  <- moneca::segment.membership(fit_sbm,  level = 2)
+# 3. level-2 memberships from each (as vectors) -----
+mem_flow <- moneca::segment.membership(fit_flow, level = 2)[[1]]
+mem_sbm  <- moneca::segment.membership(fit_sbm,  level = 2)[[1]]
 
 length(unique(mem_flow))
 length(unique(mem_sbm))

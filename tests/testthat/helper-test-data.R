@@ -110,3 +110,38 @@ get_flow_test_data <- function(
   attr(mx, "module") <- as.integer(mod)
   mx
 }
+
+# 3. Edge-list fixture for rr_from_duckdb() tests ----------------------------
+#
+# Generates a random edge list (string row / col IDs plus integer weights)
+# for the DuckDB-backed RR builder. When `bipartite = FALSE` rows and cols
+# share the same namespace ("n1", "n2", ...). When `bipartite = TRUE`,
+# namespaces are disjoint ("r1", "r2", ... vs "c1", "c2", ...) and the
+# column dimension is scaled down to roughly half the row dimension.
+
+get_edge_list_fixture <- function(
+  n_nodes = 50,
+  n_edges = 400,
+  seed = 2026,
+  bipartite = FALSE
+) {
+  set.seed(seed)
+  if (bipartite) {
+    rn <- n_nodes
+    cn <- max(10L, n_nodes %/% 2L)
+    data.frame(
+      row = paste0("r", sample.int(rn, n_edges, replace = TRUE)),
+      col = paste0("c", sample.int(cn, n_edges, replace = TRUE)),
+      weight = stats::rpois(n_edges, 3) + 1L,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    nodes <- paste0("n", seq_len(n_nodes))
+    data.frame(
+      row = sample(nodes, n_edges, replace = TRUE),
+      col = sample(nodes, n_edges, replace = TRUE),
+      weight = stats::rpois(n_edges, 3) + 1L,
+      stringsAsFactors = FALSE
+    )
+  }
+}

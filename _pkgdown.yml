@@ -50,6 +50,14 @@ reference:
       - auto_segment_levels
       - print.auto_segment_levels
       - format.auto_segment_levels
+  - title: "Out-of-core RR"
+    desc: >
+      Build a sparse relative-risk matrix from an out-of-core edge
+      source (DuckDB / Parquet / CSV) without densifying to an R
+      matrix. Output composes with the sparse-aware clustering
+      backends.
+    contents:
+      - rr_from_duckdb
 
 articles:
   - title: "Getting Started"
@@ -69,3 +77,7 @@ articles:
     desc: "MDL + MI plateau criteria for picking the right level post-hoc."
     contents:
       - monecascale-auto-level
+  - title: "Out-of-core RR"
+    desc: "DuckDB-backed sparse RR build and composition with existing backends."
+    contents:
+      - monecascale-duckdb

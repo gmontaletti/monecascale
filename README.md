@@ -39,6 +39,10 @@ Post-hoc hierarchy-level auto-selection from a full hierarchical fit. Two criter
 
 Available as `segment.levels = "auto"` on `moneca_sbm()`, `moneca_bipartite()`, and `moneca_flow()` for one-shot hierarchy fitting and trimming. Recognises backend-specific diagnostics (MDL for SBM and flow; mutual information for bipartite).
 
+### `rr_from_duckdb()`
+
+Out-of-core sparse relative-risk matrix construction via DuckDB SQL. Accepts edge-list input as a data.frame, a file path (`.csv` / `.parquet`), or a table name on a pre-connected DuckDB instance. Returns a `monecascale_rr` list with sparse `$rr`, sparse `$counts`, and margin metadata. Composes seamlessly with `moneca_bipartite()` (via `$rr`) and `moneca_sbm()` / `moneca_flow()` (via `$counts`).
+
 ## Installation
 
 ```r
@@ -85,13 +89,13 @@ See `vignette("monecascale-sbm")` for the RR ≡ DC-SBM residual walkthrough, th
 - **D3** — flow-based (`moneca_flow` via Infomap, *shipped*).
 - **D4** — scalable clique guardrail (`moneca_localclique`, planned).
 - **D5** — Poisson NMF (`moneca_nmf`, planned).
-- **D7** — out-of-core (`moneca_duckdb` / `moneca_arrow`, planned).
+- **D7** — out-of-core (`rr_from_duckdb()`, *shipped*).
 
 ## Citation
 
 ```
 Montaletti, G. (2026). monecascale: Scalable Backends for MONECA.
-R package version 0.4.1. https://github.com/gmontaletti/monecascale
+R package version 0.5.0. https://github.com/gmontaletti/monecascale
 
 Montaletti, G. (2026). moneca: Mobility Network Clustering Analysis.
 R package version 1.8.0. https://github.com/gmontaletti/MONECA

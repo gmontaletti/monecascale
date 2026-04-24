@@ -1,3 +1,37 @@
+# monecascale 0.5.0
+
+## New features
+
+- `rr_from_duckdb()` — build a sparse relative-risk matrix out of core
+  via DuckDB SQL. Accepts edge-list input as a data.frame, a file path
+  (`.csv` / `.parquet`), or a table name on a pre-connected DuckDB
+  instance. Returns a `"monecascale_rr"` list with sparse `$rr`,
+  sparse `$counts`, and margin / node-name metadata. Composes with
+  `moneca_bipartite()` (via `$rr`) and `moneca_sbm()` /
+  `moneca_flow()` (via `$counts`).
+
+## Dependencies
+
+- `duckdb (>= 1.0.0)` and `DBI (>= 1.2.0)` added to `Suggests`. The
+  package degrades gracefully with an informative error when either
+  is missing.
+
+## Documentation
+
+- New vignette `monecascale-duckdb` covering the RR bottleneck, the
+  SQL recipe, three input modes, and end-to-end composition with the
+  existing clustering backends.
+
+## Limitations
+
+- `moneca::moneca_segments()` still densifies `mat.list[[1]]`
+  internally, so the full clustering pipeline retains an in-R memory
+  ceiling around 10^5 nodes until a sparse-aware metadata path lands
+  upstream in moneca.
+- No Arrow dataset input yet; planned follow-up.
+
+---
+
 # monecascale 0.4.1
 
 ## Bug fixes / completeness

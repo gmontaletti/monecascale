@@ -6,17 +6,20 @@ Description: Provides scalable clustering backends for the moneca package,
     clustering via moneca_bipartite(), flow-based hierarchical clustering
     via the Map Equation and Infomap (moneca_flow()), and post-hoc
     hierarchy-level auto-selection via auto_segment_levels() (MDL elbow
-    or mutual information plateau). Designed as a sibling package that
-    extends moneca beyond classification-scale mobility matrices while
-    reusing moneca's output contract and downstream analysis / plotting
-    stack. The load-bearing theoretical observation is that moneca's
-    relative-risk matrix RR = O / E is the DC-SBM residual under identity
-    block interaction, so SBM inference is a principled scalable drop-in
-    for the clique-enumeration step. For two-mode (rectangular) data,
-    moneca_bipartite() extends this to the degree-corrected Latent Block
-    Model (DcLbm) on scaled-rounded RR. Flow-based clustering offers an
-    orthogonal perspective on hierarchical community detection.
-Version: 0.4.1
+    or mutual information plateau). Version 0.5.0 adds rr_from_duckdb()
+    for out-of-core relative-risk computation pushed into DuckDB SQL,
+    unblocking graphs that do not fit as dense matrices in R memory.
+    Designed as a sibling package that extends moneca beyond
+    classification-scale mobility matrices while reusing moneca's output
+    contract and downstream analysis / plotting stack. The load-bearing
+    theoretical observation is that moneca's relative-risk matrix RR = O / E
+    is the DC-SBM residual under identity block interaction, so SBM
+    inference is a principled scalable drop-in for the clique-enumeration
+    step. For two-mode (rectangular) data, moneca_bipartite() extends this
+    to the degree-corrected Latent Block Model (DcLbm) on scaled-rounded RR.
+    Flow-based clustering offers an orthogonal perspective on hierarchical
+    community detection.
+Version: 0.5.0
 Author: Giampaolo Montaletti <giampaolo.montaletti@gmail.com>
 Maintainer: Giampaolo Montaletti <giampaolo.montaletti@gmail.com>
 Authors@R: c(
@@ -37,6 +40,8 @@ Imports:
   igraph (>= 1.3.0),
   stats
 Suggests:
+  DBI (>= 1.2.0),
+  duckdb (>= 1.0.0),
   greed (>= 0.6.2),
   reticulate (>= 1.30),
   mclust,

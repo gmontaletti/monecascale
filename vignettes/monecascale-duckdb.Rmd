@@ -1,0 +1,271 @@
+---
+title: "Out-of-core RR computation with DuckDB"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{monecascale-duckdb}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 150,
+  out.width = "100%"
+)
+
+# Eval-gate on duckdb (Suggests). If missing, skip evaluation and still
+# render a readable article.
+eval_duckdb <- requireNamespace("duckdb", quietly = TRUE) &&
+  requireNamespace("DBI", quietly = TRUE)
+knitr::opts_chunk$set(eval = eval_duckdb)
+
+have_greed  <- requireNamespace("greed", quietly = TRUE)
+have_igraph <- requireNamespace("igraph", quietly = TRUE)
+```
+
+## 1. Introduction: the RR bottleneck
+
+MONECA clusters mobility data on the relative-risk matrix
+`RR = O / E`, where `E_ij = r_i * c_j / T` is the expected count
+under row / column independence. The reference implementation
+`moneca::weight.matrix()` densifies the input on its way to RR
+(`analytical_functions.R:581-595`): the observed count matrix `O` is
+materialised in full before the ratio is formed. That densification
+sets a hard R-side ceiling on problem size. A mobility graph on
+10^5+ nodes may fit comfortably as a sparse edge list, yet its dense
+matrix representation does not fit in R memory at all.
+
+`rr_from_duckdb()` lifts the RR construction step out of R and into
+DuckDB SQL. The margins, the grand total, and the cell-wise ratio
+are computed as an aggregation over the edge list; only the
+non-zero cells are ever materialised, and only once, on their way
+into a sparse `dgCMatrix`. The densification is removed at its root
+rather than worked around.
+
+The output composes directly with monecascale's sparse-aware
+backends. `moneca_bipartite()` consumes the RR matrix via its
+rectangular argument path; `moneca_sbm()` and `moneca_flow()`
+consume the raw counts exposed on `$counts`. The end result is that
+mobility datasets an order of magnitude larger than
+`moneca::moneca_fast()` can handle become tractable, without giving
+up the moneca-class contract that downstream analysis and plotting
+APIs rely on.
+
+## 2. The SQL recipe
+
+The RR computation is a three-CTE aggregation over the edge list.
+One CTE sums the counts per row; one sums per column; one takes the
+grand total. A final join multiplies the observed count by
+`total / (row_sum * col_sum)` to yield `rr`.
+
+```sql
+WITH row_sums AS (
+  SELECT row_id, SUM(w) AS s FROM edges GROUP BY row_id
+),
+col_sums AS (
+  SELECT col_id, SUM(w) AS s FROM edges GROUP BY col_id
+),
+totals AS (
+  SELECT SUM(w) AS total FROM edges
+)
+SELECT
+  e.row_id,
+  e.col_id,
+  e.w AS count,
+  e.w * t.total / (r.s * c.s) AS rr
+FROM edges e
+JOIN row_sums r ON r.row_id = e.row_id
+JOIN col_sums c ON c.col_id = e.col_id
+CROSS JOIN totals t;
+```
+
+No ordering is required, and no dense intermediate is constructed.
+DuckDB streams the aggregations over the edge list, then streams
+the join result back to R in long form. The R side receives a
+`(row_id, col_id, count, rr)` table whose length equals the number
+of non-zero cells in `O`, and feeds that directly into
+`Matrix::sparseMatrix()`. `$margins$total` reflects the full input
+total rather than a post-filter total, because that is what the RR
+denominator uses.
+
+## 3. Three input modes
+
+`rr_from_duckdb()` accepts three shapes of input. The examples
+below run on a small square fixture so they evaluate in a vignette
+build; the same code shape scales to arbitrarily large edge lists
+on disk.
+
+### 3.1 In-memory data frame
+
+```{r inmem}
+library(monecascale)
+
+set.seed(2026)
+edges <- data.frame(
+  row    = sample(paste0("n", 1:30), 200, replace = TRUE),
+  col    = sample(paste0("n", 1:30), 200, replace = TRUE),
+  weight = rpois(200, 3) + 1L,
+  stringsAsFactors = FALSE
+)
+
+res <- rr_from_duckdb(edges, weight_col = "weight", verbose = TRUE)
+str(res, max.level = 1)
+```
+
+The return value is a `"monecascale_rr"` list: `$rr` is the sparse
+RR matrix, `$counts` the sparse observed count matrix,
+`$margins$row / $col / $total` the raw margins (with `$total` being
+the full pre-diagonal-filter grand total used as the RR
+denominator), `$node_names$row / $col` the dimnames, `$bipartite`
+the mode flag, and `$n_edges / $n_nonzero` integer summaries.
+
+### 3.2 On-disk CSV or Parquet
+
+When the edge list is already on disk, pass a path instead of a
+data frame. DuckDB reads CSV natively via `read_csv_auto()`; R never
+holds the edges in memory.
+
+```{r ondisk-csv}
+path <- tempfile(fileext = ".csv")
+utils::write.csv(edges, path, row.names = FALSE)
+
+res_csv <- rr_from_duckdb(path, weight_col = "weight")
+identical(dim(res_csv$rr), dim(res$rr))
+```
+
+Parquet input works identically: DuckDB dispatches on the file
+extension to `read_parquet()`. The Parquet path is not shown here
+because it would introduce an `arrow` dependency for a
+demonstration, but the calling convention is unchanged.
+
+### 3.3 Pre-connected DuckDB table
+
+The third mode is for users who already have a DuckDB connection
+with data registered. When `edges` is a character scalar that does
+not resolve to a file on disk, `rr_from_duckdb()` treats it as a
+table or view name on the supplied connection. This is the pattern
+for streaming Parquet datasets or remote tables that a user
+attaches once and queries many times.
+
+```{r preconn}
+con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+DBI::dbWriteTable(con, "edges_tbl", edges)
+
+res_con <- rr_from_duckdb("edges_tbl", con = con, weight_col = "weight")
+identical(dim(res_con$rr), dim(res$rr))
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
+## 4. Composition with `moneca_bipartite()`
+
+For rectangular input (`bipartite = TRUE`) the RR matrix is the
+natural input to `moneca_bipartite()`. A 30 x 20 fixture is small
+enough to fit in a vignette and large enough to illustrate the
+composition.
+
+```{r bip-rr}
+set.seed(2026)
+edges_bip <- data.frame(
+  row    = paste0("r", sample(1:30, 300, replace = TRUE)),
+  col    = paste0("c", sample(1:20, 300, replace = TRUE)),
+  weight = rpois(300, 3) + 1L
+)
+
+res_bip <- rr_from_duckdb(edges_bip, weight_col = "weight", bipartite = TRUE)
+dim(res_bip$rr)
+res_bip$bipartite
+```
+
+```{r bip-fit, eval = eval_duckdb && have_greed}
+fit <- monecascale::moneca_bipartite(as.matrix(res_bip$rr))
+print(fit)
+```
+
+The dense coercion `as.matrix(res_bip$rr)` is used here because the
+current `moneca_bipartite()` contract is tested on dense input. At
+true 10^5-row scale the dense cast defeats the purpose of the
+out-of-core build; that path is reserved for a sparse-aware
+bipartite fit planned as a follow-up. The point of this section is
+the composition pattern, not the scale.
+
+## 5. Composition with `moneca_sbm()` and `moneca_flow()` via `$counts`
+
+`moneca_sbm()` and `moneca_flow()` consume raw mobility counts, not
+RR: the SBM backend builds its own independence null internally,
+and Infomap needs the unnormalised flow magnitudes to weight the
+random walk. For those entry points the useful slot is `$counts`,
+exposed alongside `$rr` specifically so that one DuckDB pass feeds
+both downstream paths.
+
+```{r counts}
+res <- rr_from_duckdb(edges, weight_col = "weight")
+dense_counts <- as.matrix(res$counts)
+dim(dense_counts)
+```
+
+```{r flow-fit, eval = eval_duckdb && have_igraph}
+fit_flow <- monecascale::moneca_flow(
+  dense_counts,
+  segment.levels = 2L,
+  seed = 2026
+)
+print(fit_flow)
+```
+
+```{r sbm-fit, eval = eval_duckdb && have_greed}
+fit_sbm <- monecascale::moneca_sbm(dense_counts, backend = "greed")
+print(fit_sbm)
+```
+
+`$rr` is the input for paths that use the relative-risk matrix
+directly, such as `moneca_bipartite()` and the planned
+`moneca_localclique()`. `$counts` is the input for paths that
+expect raw mobility. A single DuckDB aggregation yields both.
+
+## 6. Limitations
+
+- **No Arrow dataset input yet.** Partitioned Parquet datasets must
+  be materialised through DuckDB's own `read_parquet()` rather than
+  registered as Arrow datasets. A direct Arrow path is planned as a
+  follow-up.
+- **No streaming RR persistence.** The sparse RR is returned to R
+  in memory. Users whose RR does not fit in R memory need to
+  persist the long-format cell table through DuckDB directly; a
+  streaming writer is not exposed.
+- **Downstream ceiling from moneca metadata.**
+  `moneca::moneca_segments()`, called internally by the SBM and
+  flow adapters, still densifies `mat.list[[1]]` when it builds
+  per-segment summaries. The full pipeline therefore retains an
+  R-side ceiling around 10^5 nodes until upstream moneca adds a
+  sparse metadata path. `rr_from_duckdb()` removes the RR-build
+  bottleneck; it does not remove the metadata-build one.
+- **Optional dependency.** `duckdb` is a `Suggests`. Install with
+  `install.packages("duckdb")`. `rr_from_duckdb()` errors
+  informatively when the package is not available.
+
+## 7. References
+
+- DuckDB: <https://duckdb.org/>.
+- Raasveldt, M., & Muhleisen, H. (2019). DuckDB: an embeddable
+  analytical database. *Proceedings of the 2019 International
+  Conference on Management of Data*, 1981-1984.
+- The monecascale scaling roadmap places `rr_from_duckdb()` under
+  direction D7 (out-of-core / streaming backend), shipped in
+  version 0.5.0 alongside the SBM, bipartite, flow, and auto-level
+  backends documented in the other vignettes.
+
+```{r no-duckdb-note, echo = FALSE, eval = !eval_duckdb}
+cat(
+  "Note: the `duckdb` package was not available when this vignette\n",
+  "was built. The code chunks above were not evaluated. Install\n",
+  "duckdb with install.packages('duckdb') to reproduce the examples.\n",
+  sep = ""
+)
+```

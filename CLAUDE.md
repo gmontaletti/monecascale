@@ -30,6 +30,10 @@ Every exported entry point returns a `moneca`-class S3 object, so moneca's analy
 - `moneca_flow()` — flow-based hierarchical clustering via Infomap (Map Equation).
   Backend via `igraph::cluster_infomap()` (R-native, scales to ~10^5 nodes). Recursive-flat
   wrapper for 2–3 level hierarchy. Shipped in 0.4.0.
+- `rr_from_duckdb()` — out-of-core sparse RR build via DuckDB SQL.
+  Accepts data.frame / Parquet / CSV / DuckDB table. Returns a
+  `monecascale_rr` list with sparse `$rr`, `$counts`, and margins.
+  Shipped in 0.5.0.
 
 ## Planned directions (scaling roadmap)
 
@@ -40,7 +44,7 @@ Landed here unless otherwise noted. See `~/.claude/plans/monecascale-scaling-roa
 - ~~**D3** `moneca_flow()`~~ — **SHIPPED 0.4.0** Infomap / Map Equation.
 - **D4** `moneca_localclique()` — quasi-cliques, k-clique percolation, local Personalized PageRank expansion.
 - **D5** `moneca_nmf()` — Poisson NMF.
-- **D7** `moneca_duckdb()` / `moneca_arrow()` — out-of-core / streaming backend.
+- ~~**D7** moneca_duckdb / moneca_arrow~~ — **SHIPPED 0.5.0** (as rr_from_duckdb).
 
 ## Package Development Commands
 
@@ -82,11 +86,14 @@ covr::package_coverage()
 - `R/moneca_flow.R` — public `moneca_flow()` entry + backend dispatcher.
 - `R/flow_backend_igraph.R` — igraph `cluster_infomap()` backend.
 - `R/flow_utils.R` — recursive-flat hierarchy synthesis and adapter.
+- `R/rr_from_duckdb.R` — public `rr_from_duckdb()` entry for out-of-core RR construction.
+- `R/duckdb_utils.R` — DuckDB SQL recipe, input dispatch, and sparse matrix assembly.
 - `tests/testthat/helper-test-data.R` — shared generators wrapping `moneca::generate_mobility_data()`.
 - `vignettes/monecascale-sbm.Rmd` — RR ≡ DC-SBM bridge walkthrough and parity experiment.
 - `vignettes/monecascale-bipartite.Rmd` — bipartite walkthrough + recovery experiment.
 - `vignettes/monecascale-auto-level.Rmd` — auto-level walkthrough.
 - `vignettes/monecascale-flow.Rmd` — Map Equation, flat-vs-hierarchical trade-off, comparison vs SBM.
+- `vignettes/monecascale-duckdb.Rmd` — out-of-core RR bottleneck, SQL recipe, three input modes, composition with backends.
 
 ## Coding conventions
 
